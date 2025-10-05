@@ -9,8 +9,10 @@ const database = mysql.createPool({
 });
 
 database.getConnection()
-.then(() => {
-    console.log('Database connected successfully');
+.then(async (conn) => {
+    await conn.query("SET time_zone = '+07:00'");
+    console.log('Database connected successfully with timezone +07:00');
+    conn.release();
 })
 .catch(err => {
     console.error('Database connection failed:', err);

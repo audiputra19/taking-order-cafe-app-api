@@ -1,8 +1,10 @@
 import { Router } from "express";
-import { acceptOrderByDapur, acceptOrderByKasir, finishOrder, getOrder, getOrderById, getOrderComplete, readyOrder } from "../controllers/orderController";
+import { acceptOrderByDapur, acceptOrderByKasir, cancelOrderByKasir, finishOrder, getOrder, getOrderById, getOrderComplete, paidOrderByKasir, readyOrder } from "../controllers/orderController";
 
 const orderRouter = Router();
 
+orderRouter.post('/paid-kasir', paidOrderByKasir);
+orderRouter.post('/cancel-kasir', cancelOrderByKasir);
 orderRouter.post('/accept-kasir', acceptOrderByKasir);
 orderRouter.post('/accept-dapur', acceptOrderByDapur);
 orderRouter.post('/ready', readyOrder);

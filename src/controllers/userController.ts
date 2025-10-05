@@ -29,7 +29,7 @@ export const createUser = async (req: Request, res: Response) => {
 export const getUser = async (req: Request, res: Response) => {
     try {
         const [rows] = await database.query<RowDataPacket[]>(
-            `SELECT * FROM user_auth ORDER BY username`
+            `SELECT * FROM user_auth WHERE hak_akses <> '1' ORDER BY username`
         );
         return res.status(200).json(rows);
     } catch (error) {

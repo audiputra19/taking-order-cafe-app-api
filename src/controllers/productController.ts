@@ -32,7 +32,7 @@ export const upload = multer({
 const createdAt = moment().tz('Asia/Jakarta').format("YYYY-MM-DD HH:mm:ss");
 
 export const createProduct = async (req: MulterRequest, res: Response) => {
-    const { nama, harga, kategori, deskripsi } = req.body;
+    const { nama, hpp, harga, kategori, deskripsi } = req.body;
     const file = (req).file;
 
     try {
@@ -40,31 +40,32 @@ export const createProduct = async (req: MulterRequest, res: Response) => {
             return res.status(400).json({ message: "Image is required" });
         }
 
-        const datePart = moment().tz('Asia/Jakarta').format("DDMMYY");
+        // const datePart = moment().tz('Asia/Jakarta').format("DDMMYY");
 
-        // ambil id terakhir di hari ini
+        // ambil id terakhir
         const [rows] = await database.query<RowDataPacket[]>(
-            "SELECT id FROM products WHERE id LIKE ? ORDER BY id DESC LIMIT 1",
-            [`${datePart}.%`]
+            "SELECT id FROM products WHERE kategori = ? ORDER BY id DESC LIMIT 1",
+            [kategori]
         );
 
         let newNumber = "001";
         if (rows.length > 0) {
             const lastId = rows[0].id; // misal "010925.003"
-            const lastNumber = parseInt(lastId.split(".")[1]); // ambil "003"
+            const lastNumber = parseInt(lastId.split(".")[2]); // ambil "003"
             newNumber = String(lastNumber + 1).padStart(3, "0");
         }
 
-        const newId = `${datePart}.${newNumber}`;
+        const kategoriFormatted = String(kategori).padStart(2, "0");    
+        const newId = `ITEM.${kategoriFormatted}.${newNumber}`;
 
         const imageTitle = file.originalname;
         const imagePath = `/uploads/${file.filename}`;
 
         // Insert ke database
         await database.query<ResultSetHeader>(
-            `INSERT INTO products (id, nama, harga, kategori, deskripsi, image_title, image_path, created_at) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [newId, nama, harga, kategori, deskripsi, imageTitle, imagePath, createdAt]
+            `INSERT INTO products (id, nama, hpp, harga, kategori, deskripsi, image_title, image_path, created_at) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [newId, nama, hpp, harga, kategori, deskripsi, imageTitle, imagePath, createdAt]
         );
 
         return res.status(201).json({
@@ -90,7 +91,7 @@ export const getProduct = async (req: Request, res: Response) => {
 
 export const updateProduct = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { nama, harga, kategori, deskripsi, image_title, image_path: oldImage } = req.body;
+    const { nama, hpp, harga, kategori, deskripsi, image_title, image_path: oldImage } = req.body;
     const file = req.file;
 
     try {
@@ -130,12 +131,12 @@ export const updateProduct = async (req: Request, res: Response) => {
 
         const sql = `
             UPDATE products 
-            SET nama = ?, harga = ?, kategori = ?, deskripsi = ?, image_title = ?, image_path = ? 
+            SET nama = ?, hpp = ?, harga = ?, kategori = ?, deskripsi = ?, image_title = ?, image_path = ? 
             WHERE id = ?
         `;
         await database.query<ResultSetHeader>(
             sql, 
-            [nama, harga, kategori, deskripsi, newImageTitle, newImagePath, id]
+            [nama, hpp, harga, kategori, deskripsi, newImageTitle, newImagePath, id]
         );
 
         res.status(201).json({ message: "Produk berhasil diupdate" });
