@@ -28,7 +28,7 @@ export const getOrderById = async (req: Request, res: Response) => {
     try {
         const [rows] = await database.query<RowDataPacket[]>(
             `SELECT order_items.order_id, order_items.nama, order_items.harga, order_items.qty, 
-                orders.created_at
+                orders.created_at, order_items.catatan, order_items.tipe
             FROM order_items 
             INNER JOIN orders ON orders.order_id = order_items.order_id
             WHERE order_items.order_id = ? 
@@ -97,6 +97,7 @@ export const cancelOrderByKasir = async (req: Request, res: Response) => {
             [order_id, createdAt]
         );
        
+        getIO().emit("order:update");
         getIO().emit("order:cancel", { order_id });
 
         res.status(200).json({ message: "Pesanan dibatalkan" });
@@ -121,10 +122,15 @@ export const acceptOrderByKasir = async (req: Request, res: Response) => {
             [createdAt, order_id]
         );
        
-        getIO().emit("order:update");
+        try {
+            getIO().emit("order:update");
+        } catch (socketError) {
+            console.warn("Socket emit failed (ignored):", socketError);
+        }
 
         res.status(200).json({ message: "Pesanan sudah diacc kasir" });
     } catch (error: any) {
+        console.error("acceptOrderByKasir ERROR:", error);
         res.status(500).json({ message: "Terjadi kesalahan pada server" });
     }
 }
@@ -145,10 +151,15 @@ export const acceptOrderByDapur = async (req: Request, res: Response) => {
             [createdAt, order_id]
         );
        
-        getIO().emit("order:update");
+        try {
+            getIO().emit("order:update");
+        } catch (socketError) {
+            console.warn("Socket emit failed (ignored):", socketError);
+        }
 
         res.status(200).json({ message: "Pesanan sudah diacc dapur" });
     } catch (error: any) {
+        console.error("acceptOrderByDapur ERROR:", error);
         res.status(500).json({ message: "Terjadi kesalahan pada server" });
     }
 }
@@ -169,10 +180,15 @@ export const readyOrder = async (req: Request, res: Response) => {
             [createdAt, order_id]
         );
 
-        getIO().emit("order:update");
+        try {
+            getIO().emit("order:update");
+        } catch (socketError) {
+            console.warn("Socket emit failed (ignored):", socketError);
+        }
 
         res.status(200).json({ message: "Pesanan siap disajikan" });
     } catch (error: any) {
+        console.error("acceptOrderByDapur ERROR:", error);
         res.status(500).json({ message: "Terjadi kesalahan pada server" });
     }
 }
@@ -181,15 +197,27 @@ export const finishOrder = async (req: Request, res: Response) => {
     const { order_id } = req.body;
 
     try {
+        const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
+
         await database.query(
             `UPDATE orders SET proses = ? WHERE order_id = ?`,
             ["done", order_id]
         );
 
-        getIO().emit("order:update");
+        await database.query(
+            `UPDATE time_process SET done = ? WHERE order_id = ?`,
+            [createdAt, order_id]
+        );
+
+        try {
+            getIO().emit("order:update");
+        } catch (socketError) {
+            console.warn("Socket emit failed (ignored):", socketError);
+        }
 
         res.status(200).json({ message: "Pesanan selesai" });
     } catch (error: any) {
+        console.error("finishOrder ERROR:", error);
         res.status(500).json({ message: "Terjadi kesalahan pada server" });
     }
 }

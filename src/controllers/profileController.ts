@@ -5,11 +5,13 @@ import fs from "fs";
 import database from "../config/db";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 
-const uploadDir = path.resolve(__dirname, "../uploads/logo");
+// const uploadDir = path.resolve(__dirname, "../uploads/logo");
 
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+// if (!fs.existsSync(uploadDir)) {
+//   fs.mkdirSync(uploadDir, { recursive: true });
+// }
+const uploadDir = path.join('/app/uploads/logo');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {

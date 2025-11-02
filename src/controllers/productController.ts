@@ -8,10 +8,13 @@ import path from "path";
 import fs from "fs";
 
 // Pastikan folder uploads ada
-const uploadDir = path.join(__dirname, "../uploads");
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir);
-}
+// const uploadDir = path.join(__dirname, "../uploads");
+// if (!fs.existsSync(uploadDir)) {
+//     fs.mkdirSync(uploadDir);
+// }
+const uploadDir = path.join('/app/uploads');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
 
 // Konfigurasi multer
 const storage = multer.diskStorage({
@@ -89,6 +92,18 @@ export const getProduct = async (req: Request, res: Response) => {
     }
 };
 
+export const getProductDiscontinue = async (req: Request, res: Response) => {
+    try {
+        const [rows] = await database.query(
+            `SELECT * FROM products WHERE discontinue = '1' ORDER BY created_at DESC`
+        );
+        return res.status(200).json(rows);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Terjadi kesalahan pada server" });
+    }
+};
+
 export const updateProduct = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { nama, hpp, harga, kategori, deskripsi, image_title, image_path: oldImage } = req.body;
@@ -156,6 +171,21 @@ export const discontinueProduct = async (req: Request, res: Response) => {
         );
 
         res.status(200).json({ message: 'Produk telah discontinue' });
+    } catch (error) {
+        res.status(500).json({ message: 'Terjadi kesalahan pada server' });
+    }
+}
+
+export const activateProduct = async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    try {
+        await database.query<ResultSetHeader>(
+            `UPDATE products SET discontinue = ? WHERE id = ?`,
+            [0, id]
+        );
+
+        res.status(200).json({ message: 'Produk kembali aktif' });
     } catch (error) {
         res.status(500).json({ message: 'Terjadi kesalahan pada server' });
     }
