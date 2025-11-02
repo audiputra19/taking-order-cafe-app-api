@@ -29,3 +29,48 @@ export const createVoucher = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Terjadi kesalahan pada server' });
     }
 }
+
+export const getVoucher = async (req: Request, res: Response) => {
+    try {
+        const [rows] = await database.query<RowDataPacket[]>(
+            `SELECT * FROM voucher ORDER BY nama`
+        );
+
+        res.status(200).json(rows);
+    } catch (error) {
+        res.status(500).json({ message: "Terjadi kesalahan pada server" });
+    }
+}
+
+export const updateVoucher = async (req: Request, res: Response) => {
+    const {nama, min_belanja, persen, due_date} = req.body;
+    const {id} = req.params;
+
+    try {
+
+        await database.query<ResultSetHeader>(
+            `UPDATE voucher SET nama = ?, min_belanja = ?, persen = ?, due_date = ? WHERE id_voucher = ?`,
+            [nama, min_belanja, persen, due_date, id]
+        );
+
+        res.status(200).json({ message: 'Voucher berhasil diupdate' });
+    } catch (error) {
+        res.status(500).json({ message: 'Terjadi kesalahan pada server' });
+    }
+}
+
+export const deleteVoucher = async (req: Request, res: Response) => {
+    const {id} = req.params;
+
+    try {
+
+        await database.query<ResultSetHeader>(
+            `DELETE FROM voucher WHERE id_voucher = ?`, [id]
+        );
+
+        res.status(200).json({ message: 'Voucher berhasil dihapus' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Terjadi kesalahan pada server' });
+    }
+}
