@@ -16,7 +16,7 @@ import voucherRouter from "./routers/voucherRouter";
 const app = express();
 const server = http.createServer(app);
 const io = initSocket(server);
-const port = process.env.PORT_ADMIN;
+const port = process.env.TAKING_ORDER_CAFE_API_PORT;
 
 app.use(cors());
 app.use(express.json());

@@ -1,10 +1,10 @@
 import mysql from "mysql2/promise";
 
 const database = mysql.createPool({
-    host: process.env.DB_HOST_ADMIN,
-    user: process.env.DB_USER_ADMIN,
-    password: process.env.DB_PASS_ADMIN,
-    database: process.env.DB_NAME_KOPSAS_ADMIN,
+    host: process.env.TAKING_ORDER_CAFE_API_DB_HOST,
+    user: process.env.TAKING_ORDER_CAFE_API_DB_USER,
+    password: process.env.TAKING_ORDER_CAFE_API_DB_PASS,
+    database: process.env.TAKING_ORDER_CAFE_API_DB_NAME,
     timezone: "+07:00",
     waitForConnections: true,
     connectionLimit: 20,

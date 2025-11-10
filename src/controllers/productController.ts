@@ -39,8 +39,12 @@ export const createProduct = async (req: MulterRequest, res: Response) => {
     const file = (req).file;
 
     try {
+        if (!nama || !hpp || !harga || !kategori || !deskripsi) {
+            return res.status(400).json({ message: "Semua form harus diisi!" });
+        }
+
         if (!file) {
-            return res.status(400).json({ message: "Image is required" });
+            return res.status(400).json({ message: "Gambar produk wajib diupload!" });
         }
 
         // const datePart = moment().tz('Asia/Jakarta').format("DDMMYY");
@@ -110,6 +114,14 @@ export const updateProduct = async (req: Request, res: Response) => {
     const file = req.file;
 
     try {
+
+        if (!id) {
+            return res.status(400).json({ message: "ID produk tidak ditemukan!" });
+        }
+
+        if (!nama || !hpp || !harga || !kategori || !deskripsi) {
+            return res.status(400).json({ message: "Semua form harus diisi!" });
+        }
 
         // console.log("id: ", id);
         // console.log("nama: ", nama);

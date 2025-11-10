@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET_ADMIN as string;
+const JWT_SECRET = process.env.TAKING_ORDER_CAFE_API_JWT_SECRET as string;
 
 export function generateToken(payload: object) {
     return jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' });

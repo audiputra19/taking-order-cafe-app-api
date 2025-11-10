@@ -6,6 +6,11 @@ export const createVoucher = async (req: Request, res: Response) => {
     const {nama, min_belanja, persen, due_date} = req.body;
 
     try {
+
+        if (!nama || !min_belanja || !persen || !due_date) {
+            return res.status(400).json({ message: "Semua form harus diisi!" });
+        }
+
         const [rows] = await database.query<RowDataPacket[]>(
             "SELECT id_voucher as id FROM voucher ORDER BY id_voucher DESC LIMIT 1"
         );
@@ -47,6 +52,14 @@ export const updateVoucher = async (req: Request, res: Response) => {
     const {id} = req.params;
 
     try {
+
+        if (!id) {
+            return res.status(400).json({ message: "ID voucher tidak ditemukan!" });
+        }
+
+        if (!nama || !min_belanja || !persen || !due_date) {
+            return res.status(400).json({ message: "Semua form harus diisi!" });
+        }
 
         await database.query<ResultSetHeader>(
             `UPDATE voucher SET nama = ?, min_belanja = ?, persen = ?, due_date = ? WHERE id_voucher = ?`,

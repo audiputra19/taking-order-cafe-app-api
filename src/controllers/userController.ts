@@ -7,6 +7,10 @@ export const createUser = async (req: Request, res: Response) => {
     const { nama, username, password, confirmPassword, hak_akses } = req.body;
 
     try {
+        if (!nama || !username || !password || !confirmPassword || !hak_akses) {
+            return res.status(400).json({ message: "Semua form harus diisi!" });
+        }
+
         if(password !== confirmPassword) {
             return res.status(400).json({ message: 'Konfirmasi password harus sama' });
         }
