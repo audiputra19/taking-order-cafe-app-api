@@ -43,17 +43,39 @@ export const getOrderById = async (req: Request, res: Response) => {
 }
 
 export const getOrderComplete = async (req: Request, res: Response) => {
+    const year = req.params.year ? Number(req.params.year) : 0;
+    const month = req.params.month ? Number(req.params.month) : 0;
+    const process = req.params.process ?? "all";
 
     try {
-        const [rows] = await database.query<RowDataPacket[]>(
-            `SELECT * FROM orders WHERE (proses = 'done' OR proses = 'canceled') ORDER BY created_at DESC`
-        );
+        const sql = `
+            SELECT *
+            FROM orders
+            WHERE
+              (? = 0 OR YEAR(created_at) = ?)
+              AND (? = 0 OR MONTH(created_at) = ?)
+              AND (
+                    (? = 'all' AND (proses = 'done' OR proses = 'canceled'))
+                    OR 
+                    (? != 'all' AND proses = ?)
+                  )
+            ORDER BY created_at DESC
+        `;
+
+        const params = [
+            year, year,
+            month, month,
+            process,
+            process, process
+        ];
+
+        const [rows] = await database.query<RowDataPacket[]>(sql, params);
 
         res.status(200).json(rows);
     } catch (error: any) {
         res.status(500).json({ message: "Terjadi kesalahan pada server" });
     }
-}
+};
 
 export const paidOrderByKasir = async (req: Request, res: Response) => {
     const { order_id } =  req.body;
