@@ -203,7 +203,10 @@ export const readyOrder = async (req: Request, res: Response) => {
         );
 
         try {
-            getIO().emit("order:update");
+            getIO().emit("order:update", {
+                order_id,
+                proses: "ready",
+            });
         } catch (socketError) {
             console.warn("Socket emit failed (ignored):", socketError);
         }

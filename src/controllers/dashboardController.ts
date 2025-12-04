@@ -17,27 +17,29 @@ export const TotalOrder = async (req: Request, res: Response) => {
         if (periode === 1) {
             // Bulan ini
             currentfilter = `
-                AND orders.created_at >= DATE_SUB(?, INTERVAL 1 MONTH)
+                AND orders.created_at >= DATE_FORMAT(?, '%Y-%m-01')
+                AND orders.created_at < DATE_FORMAT(DATE_ADD(?, INTERVAL 1 MONTH), '%Y-%m-01')
             `;
-            paramsCurrent = [createdAt];
+            paramsCurrent = [createdAt, createdAt];
 
             // Bulan lalu
             previousfilter = `
-                AND created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
-                AND created_at < DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
+                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
+                AND orders.created_at < DATE_FORMAT(?, '%Y-%m-01')
             `;
             paramsPrevious = [createdAt, createdAt];
         } else if (periode === 2) {
             // 3 bulan terakhir
             currentfilter = `
-                AND created_at >= DATE_SUB(?, INTERVAL 3 MONTH)
+                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
+                AND orders.created_at < DATE_ADD(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
             `;
-            paramsCurrent = [createdAt];
+            paramsCurrent = [createdAt, createdAt];
 
-            // 3 bulan sebelum periode 3 bulan terakhir
+            // 3 bulan sebelum
             previousfilter = `
-                AND created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 6 MONTH)
-                AND created_at < DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 3 MONTH)
+                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 5 MONTH)
+                AND orders.created_at < DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
             `;
             paramsPrevious = [createdAt, createdAt];
         } else {
@@ -95,27 +97,29 @@ export const OrderCanceled = async (req: Request, res: Response) => {
         if (periode === 1) {
             // Bulan ini
             currentfilter = `
-                AND orders.created_at >= DATE_SUB(?, INTERVAL 1 MONTH)
+                AND orders.created_at >= DATE_FORMAT(?, '%Y-%m-01')
+                AND orders.created_at < DATE_FORMAT(DATE_ADD(?, INTERVAL 1 MONTH), '%Y-%m-01')
             `;
-            paramsCurrent = [createdAt];
+            paramsCurrent = [createdAt, createdAt];
 
             // Bulan lalu
             previousfilter = `
-                AND created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
-                AND created_at < DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
+                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
+                AND orders.created_at < DATE_FORMAT(?, '%Y-%m-01')
             `;
             paramsPrevious = [createdAt, createdAt];
         } else if (periode === 2) {
             // 3 bulan terakhir
             currentfilter = `
-                AND created_at >= DATE_SUB(?, INTERVAL 3 MONTH)
+                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
+                AND orders.created_at < DATE_ADD(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
             `;
-            paramsCurrent = [createdAt];
+            paramsCurrent = [createdAt, createdAt];
 
-            // 3 bulan sebelum periode 3 bulan terakhir
+            // 3 bulan sebelum
             previousfilter = `
-                AND created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 6 MONTH)
-                AND created_at < DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 3 MONTH)
+                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 5 MONTH)
+                AND orders.created_at < DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
             `;
             paramsPrevious = [createdAt, createdAt];
         } else {
@@ -174,27 +178,31 @@ export const AverageOrder = async (req: Request, res: Response) => {
 
         if (periode === 1) {
             currentfilter = `
-                AND orders.created_at >= DATE_SUB(?, INTERVAL 1 MONTH)
+                AND orders.created_at >= DATE_FORMAT(?, '%Y-%m-01')
+                AND orders.created_at < DATE_FORMAT(DATE_ADD(?, INTERVAL 1 MONTH), '%Y-%m-01')
             `;
-            paramsCurrent = [createdAt];
+            paramsCurrent = [createdAt, createdAt];
 
             previousfilter = `
-                AND created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
-                AND created_at < DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
+                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
+                AND orders.created_at < DATE_FORMAT(?, '%Y-%m-01')
             `;
             paramsPrevious = [createdAt, createdAt];
             divider = 30;
             unit = "day";
 
         } else if (periode === 2) {
+            // 3 bulan terakhir
             currentfilter = `
-                AND created_at >= DATE_SUB(?, INTERVAL 3 MONTH)
+                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
+                AND orders.created_at < DATE_ADD(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
             `;
-            paramsCurrent = [createdAt];
+            paramsCurrent = [createdAt, createdAt];
 
+            // 3 bulan sebelum
             previousfilter = `
-                AND created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 6 MONTH)
-                AND created_at < DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 3 MONTH)
+                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 5 MONTH)
+                AND orders.created_at < DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
             `;
             paramsPrevious = [createdAt, createdAt];
             divider = 3;
@@ -277,9 +285,10 @@ export const CategoryPerformance = async (req: Request, res: Response) => {
         let currentfilter = "";
         if (periode === 1) {
             currentfilter = `
-                AND orders.created_at >= DATE_SUB(?, INTERVAL 1 MONTH)
+                AND orders.created_at >= DATE_FORMAT(?, '%Y-%m-01')
+                AND orders.created_at < DATE_FORMAT(DATE_ADD(?, INTERVAL 1 MONTH), '%Y-%m-01')
             `;
-            paramsCurrent = [createdAt]
+            paramsCurrent = [createdAt, createdAt];
         } else if (periode === 2) {
             currentfilter = `
                 AND orders.created_at >= DATE_SUB(?, INTERVAL 3 MONTH)
@@ -322,9 +331,10 @@ export const BestSellingProducts = async (req: Request, res: Response) => {
         let currentfilter = "";
         if (periode === 1) {
             currentfilter = `
-                AND orders.created_at >= DATE_SUB(?, INTERVAL 1 MONTH)
+                AND orders.created_at >= DATE_FORMAT(?, '%Y-%m-01')
+                AND orders.created_at < DATE_FORMAT(DATE_ADD(?, INTERVAL 1 MONTH), '%Y-%m-01')
             `;
-            paramsCurrent = [createdAt];
+            paramsCurrent = [createdAt, createdAt];
         } else if (periode === 2) {
             currentfilter = `
                 AND orders.created_at >= DATE_SUB(?, INTERVAL 3 MONTH)
@@ -371,9 +381,10 @@ export const LowestSellingProducts = async (req: Request, res: Response) => {
         let currentfilter = "";
         if (periode === 1) {
             currentfilter = `
-                AND orders.created_at >= DATE_SUB(?, INTERVAL 1 MONTH)
+                AND orders.created_at >= DATE_FORMAT(?, '%Y-%m-01')
+                AND orders.created_at < DATE_FORMAT(DATE_ADD(?, INTERVAL 1 MONTH), '%Y-%m-01')
             `;
-            paramsCurrent = [createdAt];
+            paramsCurrent = [createdAt, createdAt];
         } else if (periode === 2) {
             currentfilter = `
                 AND orders.created_at >= DATE_SUB(?, INTERVAL 3 MONTH)
@@ -420,9 +431,10 @@ export const AverageFulFillmentTime = async (req: Request, res: Response) => {
         let currentfilter = "";
         if (periode === 1) {
             currentfilter = `
-                AND o.created_at >= DATE_SUB(?, INTERVAL 1 MONTH)
+                AND o.created_at >= DATE_FORMAT(?, '%Y-%m-01')
+                AND o.created_at < DATE_FORMAT(DATE_ADD(?, INTERVAL 1 MONTH), '%Y-%m-01')
             `;
-            paramsCurrent = [createdAt];
+            paramsCurrent = [createdAt, createdAt];
         } else if (periode === 2) {
             currentfilter = `
                 AND o.created_at >= DATE_SUB(?, INTERVAL 3 MONTH)
@@ -474,9 +486,10 @@ export const PeakOrderTime = async (req: Request, res: Response) => {
         let currentfilter = "";
         if (periode === 1) {
             currentfilter = `
-                AND orders.created_at >= DATE_SUB(?, INTERVAL 1 MONTH)
+                AND orders.created_at >= DATE_FORMAT(?, '%Y-%m-01')
+                AND orders.created_at < DATE_FORMAT(DATE_ADD(?, INTERVAL 1 MONTH), '%Y-%m-01')
             `;
-            paramsCurrent = [createdAt];
+            paramsCurrent = [createdAt, createdAt];
         } else if (periode === 2) {
             currentfilter = `
                 AND orders.created_at >= DATE_SUB(?, INTERVAL 3 MONTH)
@@ -525,29 +538,31 @@ export const TotalRevenue = async (req: Request, res: Response) => {
         if (periode === 1) {
             // Bulan ini
             currentfilter = `
-                AND orders.created_at >= DATE_SUB(?, INTERVAL 1 MONTH)
+                AND orders.created_at >= DATE_FORMAT(?, '%Y-%m-01')
+                AND orders.created_at < DATE_FORMAT(DATE_ADD(?, INTERVAL 1 MONTH), '%Y-%m-01')
             `;
-            paramsCurrent = [createdAt]
+            paramsCurrent = [createdAt, createdAt]
 
             // Bulan lalu
             previousfilter = `
-                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
-                AND orders.created_at < DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
+                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
+                AND orders.created_at < DATE_FORMAT(?, '%Y-%m-01')
             `;
             paramsPrevious = [createdAt, createdAt]
         } else if (periode === 2) {
             // 3 bulan terakhir
             currentfilter = `
-                AND orders.created_at >= DATE_SUB(?, INTERVAL 3 MONTH)
+                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
+                AND orders.created_at < DATE_ADD(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
             `;
-            paramsCurrent = [createdAt]
+            paramsCurrent = [createdAt, createdAt];
 
-            // 3 bulan sebelum periode 3 bulan terakhir
+            // 3 bulan sebelum
             previousfilter = `
-                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 6 MONTH)
-                AND orders.created_at < DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 3 MONTH)
+                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 5 MONTH)
+                AND orders.created_at < DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
             `;
-            paramsPrevious = [createdAt, createdAt]
+            paramsPrevious = [createdAt, createdAt];
         } else {
             // Tahun ini
             currentfilter = `
@@ -605,27 +620,29 @@ export const TotalProfit = async (req: Request, res: Response) => {
         if (periode === 1) {
             // Bulan ini
             currentfilter = `
-                AND orders.created_at >= DATE_SUB(?, INTERVAL 1 MONTH)
+                AND orders.created_at >= DATE_FORMAT(?, '%Y-%m-01')
+                AND orders.created_at < DATE_FORMAT(DATE_ADD(?, INTERVAL 1 MONTH), '%Y-%m-01')
             `;
-            paramsCurrent = [createdAt];
+            paramsCurrent = [createdAt, createdAt];
 
             // Bulan lalu
             previousfilter = `
-                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
-                AND orders.created_at < DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
+                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
+                AND orders.created_at < DATE_FORMAT(?, '%Y-%m-01')
             `;
             paramsPrevious = [createdAt, createdAt];
         } else if (periode === 2) {
             // 3 bulan terakhir
             currentfilter = `
-                AND orders.created_at >= DATE_SUB(?, INTERVAL 3 MONTH)
+                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
+                AND orders.created_at < DATE_ADD(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
             `;
-            paramsCurrent = [createdAt];
+            paramsCurrent = [createdAt, createdAt];
 
-            // 3 bulan sebelum periode 3 bulan terakhir
+            // 3 bulan sebelum
             previousfilter = `
-                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 6 MONTH)
-                AND orders.created_at < DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 3 MONTH)
+                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 5 MONTH)
+                AND orders.created_at < DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
             `;
             paramsPrevious = [createdAt, createdAt];
         } else {
@@ -643,11 +660,7 @@ export const TotalProfit = async (req: Request, res: Response) => {
         }
 
         const [current] = await database.query<RowDataPacket[]>(
-            `SELECT SUM(
-                (order_items.qty * order_items.harga) 
-                - ((order_items.qty * order_items.harga) - (order_items.qty * products.hpp))
-                ) 
-                as total_profit
+            `SELECT SUM((order_items.harga - products.hpp) * order_items.qty) AS total_profit
             FROM order_items
             INNER JOIN orders ON orders.order_id = order_items.order_id
             INNER JOIN products ON products.id = order_items.produk_id
@@ -658,11 +671,7 @@ export const TotalProfit = async (req: Request, res: Response) => {
 
         // Tahun lalu
         const [previous] = await database.query<RowDataPacket[]>(
-            `SELECT SUM(
-                (order_items.qty * order_items.harga) 
-                - ((order_items.qty * order_items.harga) - (order_items.qty * products.hpp))
-                ) 
-                as total_profit
+            `SELECT SUM((order_items.harga - products.hpp) * order_items.qty) AS total_profit
             FROM order_items
             INNER JOIN orders ON orders.order_id = order_items.order_id
             INNER JOIN products ON products.id = order_items.produk_id
@@ -695,27 +704,29 @@ export const AverageOrderValue = async (req: Request, res: Response) => {
         if (periode === 1) {
             // Bulan ini
             currentfilter = `
-                AND orders.created_at >= DATE_SUB(?, INTERVAL 1 MONTH)
+                AND orders.created_at >= DATE_FORMAT(?, '%Y-%m-01')
+                AND orders.created_at < DATE_FORMAT(DATE_ADD(?, INTERVAL 1 MONTH), '%Y-%m-01')
             `;
-            paramsCurrent = [createdAt];
+            paramsCurrent = [createdAt, createdAt];
 
             // Bulan lalu
             previousfilter = `
-                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
-                AND orders.created_at < DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
+                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
+                AND orders.created_at < DATE_FORMAT(?, '%Y-%m-01')
             `;
             paramsPrevious = [createdAt, createdAt];
         } else if (periode === 2) {
             // 3 bulan terakhir
             currentfilter = `
-                AND orders.created_at >= DATE_SUB(?, INTERVAL 3 MONTH)
+                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
+                AND orders.created_at < DATE_ADD(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
             `;
-            paramsCurrent = [createdAt];
+            paramsCurrent = [createdAt, createdAt];
 
-            // 3 bulan sebelum periode 3 bulan terakhir
+            // 3 bulan sebelum
             previousfilter = `
-                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 6 MONTH)
-                AND orders.created_at < DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 3 MONTH)
+                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 5 MONTH)
+                AND orders.created_at < DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
             `;
             paramsPrevious = [createdAt, createdAt];
         } else {
@@ -733,7 +744,8 @@ export const AverageOrderValue = async (req: Request, res: Response) => {
         }
 
         const [current] = await database.query<RowDataPacket[]>(
-            `SELECT ROUND(SUM((order_items.qty * order_items.harga)) / SUM(order_items.qty)) as total
+            `SELECT ROUND(SUM(order_items.qty * order_items.harga) 
+                    / COUNT(DISTINCT orders.order_id)) AS total
             FROM order_items
             INNER JOIN orders ON orders.order_id = order_items.order_id
             INNER JOIN products ON products.id = order_items.produk_id
@@ -744,7 +756,8 @@ export const AverageOrderValue = async (req: Request, res: Response) => {
 
         // Tahun lalu
         const [previous] = await database.query<RowDataPacket[]>(
-            `SELECT ROUND(SUM((order_items.qty * order_items.harga)) / SUM(order_items.qty)) as total
+            `SELECT ROUND(SUM(order_items.qty * order_items.harga) 
+                    / COUNT(DISTINCT orders.order_id)) AS total
             FROM order_items
             INNER JOIN orders ON orders.order_id = order_items.order_id
             INNER JOIN products ON products.id = order_items.produk_id
@@ -886,9 +899,10 @@ export const TopPaymentMethod = async (req: Request, res: Response) => {
         let currentfilter = "";
         if (periode === 1) {
             currentfilter = `
-                AND orders.created_at >= DATE_SUB(?, INTERVAL 1 MONTH)
+                AND orders.created_at >= DATE_FORMAT(?, '%Y-%m-01')
+                AND orders.created_at < DATE_FORMAT(DATE_ADD(?, INTERVAL 1 MONTH), '%Y-%m-01')
             `;
-            paramsCurrent = [createdAt];
+            paramsCurrent = [createdAt, createdAt];
         } else if (periode === 2) {
             currentfilter = `
                 AND orders.created_at >= DATE_SUB(?, INTERVAL 3 MONTH)
