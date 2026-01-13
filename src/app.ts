@@ -12,6 +12,8 @@ import userRouter from "./routers/userRouter";
 import dashboardRouter from "./routers/dashboardRouter";
 import profileRouter from "./routers/profileRouter";
 import voucherRouter from "./routers/voucherRouter";
+import wilayahRouter from "./routers/wilayahRouter";
+import outletRouter from "./routers/outletRouter";
 
 const app = express();
 const server = http.createServer(app);
@@ -34,6 +36,8 @@ app.use("/user", userRouter);
 app.use("/dashboard", dashboardRouter);
 app.use("/profile", profileRouter);
 app.use("/voucher", voucherRouter);
+app.use("/api/wilayah", wilayahRouter);
+app.use("/outlet", outletRouter);
 
 app.get("/", (req: Request, res: Response) => {
     res.send("Welcome back!");

@@ -35,10 +35,14 @@ export const upload = multer({
 const createdAt = moment().tz('Asia/Jakarta').format("YYYY-MM-DD HH:mm:ss");
 
 export const createProduct = async (req: MulterRequest, res: Response) => {
-    const { nama, hpp, harga, kategori, deskripsi } = req.body;
+    const { outlet_id, nama, hpp, harga, kategori, deskripsi } = req.body;
     const file = (req).file;
 
     try {
+        if(!outlet_id) {
+            return res.status(400).json({ message: "Outlet ID tidak boleh kosong!" });
+        }
+
         if (!nama || !hpp || !harga || !kategori || !deskripsi) {
             return res.status(400).json({ message: "Semua form harus diisi!" });
         }
@@ -70,9 +74,9 @@ export const createProduct = async (req: MulterRequest, res: Response) => {
 
         // Insert ke database
         await database.query<ResultSetHeader>(
-            `INSERT INTO products (id, nama, hpp, harga, kategori, deskripsi, image_title, image_path, created_at) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [newId, nama, hpp, harga, kategori, deskripsi, imageTitle, imagePath, createdAt]
+            `INSERT INTO products (id, outlet_id, nama, hpp, harga, kategori, deskripsi, image_title, image_path, created_at) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [newId, outlet_id, nama, hpp, harga, kategori, deskripsi, imageTitle, imagePath, createdAt]
         );
 
         return res.status(201).json({
@@ -85,9 +89,12 @@ export const createProduct = async (req: MulterRequest, res: Response) => {
 }
 
 export const getProduct = async (req: Request, res: Response) => {
+    const outlet_id = req.params.outlet_id;
+
     try {
         const [rows] = await database.query(
-            `SELECT * FROM products WHERE discontinue <> '1' ORDER BY created_at DESC`
+            `SELECT * FROM products WHERE discontinue <> '1' AND outlet_id = ? ORDER BY created_at DESC`,
+            [outlet_id]
         );
         return res.status(200).json(rows);
     } catch (error) {
@@ -97,9 +104,12 @@ export const getProduct = async (req: Request, res: Response) => {
 };
 
 export const getProductDiscontinue = async (req: Request, res: Response) => {
+    const outlet_id = req.params.outlet_id
+
     try {
         const [rows] = await database.query(
-            `SELECT * FROM products WHERE discontinue = '1' ORDER BY created_at DESC`
+            `SELECT * FROM products WHERE discontinue = '1' AND outlet_id = ? ORDER BY created_at DESC`,
+            [outlet_id]
         );
         return res.status(200).json(rows);
     } catch (error) {

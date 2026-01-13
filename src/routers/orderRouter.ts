@@ -10,7 +10,7 @@ orderRouter.post('/accept-dapur', acceptOrderByDapur);
 orderRouter.post('/ready', readyOrder);
 orderRouter.post('/finish', finishOrder);
 orderRouter.get('/get-order', getOrder);
-orderRouter.get('/get-order-complete/:year/:month/:process', getOrderComplete);
+orderRouter.get('/get-order-complete/:year/:month/:process/:outlet_id', getOrderComplete);
 orderRouter.get('/get-order-by-id/:id', getOrderById);
 
 export default orderRouter;

@@ -4,10 +4,10 @@ import { ResultSetHeader, RowDataPacket } from "mysql2";
 import bcrypt from 'bcryptjs';
 
 export const createUser = async (req: Request, res: Response) => {
-    const { nama, username, password, confirmPassword, hak_akses } = req.body;
+    const { outlet_id, nama, username, password, confirmPassword, hak_akses } = req.body;
 
     try {
-        if (!nama || !username || !password || !confirmPassword || !hak_akses) {
+        if (!outlet_id || !nama || !username || !password || !confirmPassword || !hak_akses) {
             return res.status(400).json({ message: "Semua form harus diisi!" });
         }
 
@@ -19,21 +19,26 @@ export const createUser = async (req: Request, res: Response) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         await database.query<ResultSetHeader>(
-            `INSERT INTO user_auth (username, password, nama, hak_akses)
-            VALUES (?, ?, ? ,?)`,
-            [username, hashedPassword, nama, hak_akses]
+            `INSERT INTO profile_user (outlet_id, username, password, name, hak_akses)
+            VALUES (?, ?, ?, ? ,?)`,
+            [outlet_id, username, hashedPassword, nama, hak_akses]
         );
 
         res.status(200).json({ message: 'User berhasil diinput' });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ message: 'Terjadi kesalahan pada server' });
     }
 }
 
 export const getUser = async (req: Request, res: Response) => {
+    const outlet_id = req.params.outlet_id;
+    // console.log("outlet_id:", outlet_id)
+
     try {
         const [rows] = await database.query<RowDataPacket[]>(
-            `SELECT * FROM user_auth WHERE hak_akses <> '1' ORDER BY username`
+            `SELECT * FROM profile_user WHERE hak_akses <> '1' AND outlet_id = ? ORDER BY username`,
+            [outlet_id]
         );
         return res.status(200).json(rows);
     } catch (error) {
@@ -43,12 +48,12 @@ export const getUser = async (req: Request, res: Response) => {
 };
 
 export const deleteUser = async (req: Request, res: Response) => {
-    const { username } = req.params;
+    const { username, outlet_id } = req.body;
     // console.log(username)
 
     try {
         await database.query<ResultSetHeader>(
-            `DELETE FROM user_auth WHERE username = ?`, [username]
+            `DELETE FROM profile_user WHERE username = ? AND outlet_id = ?`, [username, outlet_id]
         );
 
         res.status(200).json({ message: 'User berhasil dihapus' });

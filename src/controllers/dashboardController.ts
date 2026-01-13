@@ -4,7 +4,7 @@ import { RowDataPacket } from "mysql2";
 import moment from "moment-timezone";
 
 export const TotalOrder = async (req: Request, res: Response) => {
-    const { periode } = req.body;
+    const { outlet_id, periode } = req.body;
 
     try {
         const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
@@ -60,8 +60,9 @@ export const TotalOrder = async (req: Request, res: Response) => {
             `SELECT COUNT(*) AS total_order
             FROM orders
             WHERE proses = 'done'
+            AND outlet_id = ?
             ${currentfilter}`,
-            paramsCurrent
+            [outlet_id, ...paramsCurrent]
         );
 
         // Tahun lalu
@@ -69,8 +70,9 @@ export const TotalOrder = async (req: Request, res: Response) => {
             `SELECT COUNT(*) AS total_order
             FROM orders
             WHERE proses = 'done'
+            AND outlet_id = ?
             ${previousfilter}`,
-            paramsPrevious
+            [outlet_id, ...paramsPrevious]
         );
 
         res.json({
@@ -84,7 +86,7 @@ export const TotalOrder = async (req: Request, res: Response) => {
 };
 
 export const OrderCanceled = async (req: Request, res: Response) => {
-    const { periode } = req.body;
+    const { outlet_id, periode } = req.body;
 
     try {
         const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
@@ -140,8 +142,9 @@ export const OrderCanceled = async (req: Request, res: Response) => {
             `SELECT COUNT(*) AS total_order
             FROM orders
             WHERE proses = 'canceled'
+            AND outlet_id = ?
             ${currentfilter}`,
-            paramsCurrent
+            [outlet_id, ...paramsCurrent]
         );
 
         // Tahun lalu
@@ -149,8 +152,9 @@ export const OrderCanceled = async (req: Request, res: Response) => {
             `SELECT COUNT(*) AS total_order
             FROM orders
             WHERE proses = 'canceled'
+            AND outlet_id = ?
             ${previousfilter}`,
-            paramsPrevious
+            [outlet_id, ...paramsPrevious]
         );
 
         res.status(200).json({
@@ -164,7 +168,7 @@ export const OrderCanceled = async (req: Request, res: Response) => {
 };
 
 export const AverageOrder = async (req: Request, res: Response) => {
-    const { periode } = req.body;
+    const { outlet_id, periode } = req.body;
 
     try {
         const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
@@ -226,16 +230,18 @@ export const AverageOrder = async (req: Request, res: Response) => {
             `SELECT COUNT(*) AS total_order
              FROM orders
              WHERE proses = 'done'
+             AND outlet_id = ?
              ${currentfilter}`,
-             paramsCurrent
+             [outlet_id, ...paramsCurrent]
         );
 
         const [previous] = await database.query<RowDataPacket[]>(
             `SELECT COUNT(*) AS total_order
              FROM orders
              WHERE proses = 'done'
+             AND outlet_id = ?
              ${previousfilter}`,
-             paramsPrevious
+             [outlet_id, ...paramsPrevious]
         );
 
         res.status(200).json({
@@ -255,17 +261,19 @@ export const AverageOrder = async (req: Request, res: Response) => {
 };
 
 export const OrderTrend = async (req: Request, res: Response) => {
+    const outlet_id = req.params.outlet_id;
 
     try {
         const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
         const [rows] = await database.query<RowDataPacket[]>(
             `SELECT orders.order_id as id, DATE(orders.created_at) as createdAt, count(*) as qty
             FROM orders
-            WHERE proses = 'done'
+            WHERE orders.proses = 'done'
+            AND orders.outlet_id = ?
             AND YEAR(orders.created_at) = YEAR(?)
             GROUP BY DATE(orders.created_at)
             ORDER BY orders.created_at`,
-            [createdAt]
+            [outlet_id, createdAt]
         )
 
         res.status(200).json(rows);
@@ -276,7 +284,7 @@ export const OrderTrend = async (req: Request, res: Response) => {
 }
 
 export const CategoryPerformance = async (req: Request, res: Response) => {
-    const { periode } = req.body;
+    const { outlet_id, periode } = req.body;
 
     try {
         const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
@@ -306,12 +314,13 @@ export const CategoryPerformance = async (req: Request, res: Response) => {
             FROM order_items
             INNER JOIN orders ON orders.order_id = order_items.order_id
             INNER JOIN products ON products.id = order_items.produk_id
-            WHERE proses = 'done'
+            WHERE orders.proses = 'done'
+            AND orders.outlet_id = ?
             ${currentfilter}
             GROUP BY products.kategori
             ORDER BY SUM(order_items.qty) DESC
             LIMIT 5`,
-            paramsCurrent
+            [outlet_id, ...paramsCurrent]
         )
 
         res.status(200).json(rows);
@@ -322,7 +331,7 @@ export const CategoryPerformance = async (req: Request, res: Response) => {
 }
 
 export const BestSellingProducts = async (req: Request, res: Response) => {
-    const { periode } = req.body;
+    const { outlet_id, periode } = req.body;
 
     try {
         const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
@@ -351,12 +360,13 @@ export const BestSellingProducts = async (req: Request, res: Response) => {
             `SELECT order_items.nama as name, SUM(order_items.qty) as qty
             FROM order_items
             INNER JOIN orders ON orders.order_id = order_items.order_id
-            WHERE proses = 'done'
+            WHERE orders.proses = 'done'
+            AND orders.outlet_id = ?
 			${currentfilter}
 			GROUP BY order_items.nama
             ORDER BY SUM(order_items.qty) DESC, orders.created_at
             LIMIT 5`,
-            paramsCurrent
+            [outlet_id, ...paramsCurrent]
         )
 
         const data = rows.map(item => ({
@@ -372,7 +382,7 @@ export const BestSellingProducts = async (req: Request, res: Response) => {
 }
 
 export const LowestSellingProducts = async (req: Request, res: Response) => {
-    const { periode } = req.body;
+    const { outlet_id, periode } = req.body;
 
     try {
         const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
@@ -401,12 +411,13 @@ export const LowestSellingProducts = async (req: Request, res: Response) => {
             `SELECT order_items.nama as name, SUM(order_items.qty) as qty
             FROM order_items
             INNER JOIN orders ON orders.order_id = order_items.order_id
-            WHERE proses = 'done'
+            WHERE orders.proses = 'done'
+            AND orders.outlet_id = ?
 			${currentfilter}
 			GROUP BY order_items.nama
             ORDER BY SUM(order_items.qty), orders.created_at
             LIMIT 5`,
-            paramsCurrent
+            [outlet_id, ...paramsCurrent]
         )
 
         const data = rows.map(item => ({
@@ -422,7 +433,7 @@ export const LowestSellingProducts = async (req: Request, res: Response) => {
 }
 
 export const AverageFulFillmentTime = async (req: Request, res: Response) => {
-    const { periode } = req.body;
+    const { outlet_id, periode } = req.body;
 
     try {
         const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
@@ -458,8 +469,9 @@ export const AverageFulFillmentTime = async (req: Request, res: Response) => {
             FROM orders o
             JOIN time_process t ON o.order_id = t.order_id
             WHERE t.ready IS NOT NULL
+            AND o.outlet_id = ?
             ${currentfilter}`,
-            paramsCurrent
+            [outlet_id, ...paramsCurrent]
         )
 
         const data = {
@@ -477,7 +489,7 @@ export const AverageFulFillmentTime = async (req: Request, res: Response) => {
 }
 
 export const PeakOrderTime = async (req: Request, res: Response) => {
-    const { periode } = req.body;
+    const { outlet_id, periode } = req.body;
 
     try {
         const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
@@ -508,11 +520,12 @@ export const PeakOrderTime = async (req: Request, res: Response) => {
                 COUNT(*) AS qty
             FROM orders
             WHERE proses = 'done'
+            AND outlet_id = ?
             ${currentfilter}
             GROUP BY category
             ORDER BY qty DESC
             LIMIT 3`,
-            paramsCurrent
+            [outlet_id, ...paramsCurrent]
         )
 
         res.status(200).json(rows);
@@ -525,7 +538,7 @@ export const PeakOrderTime = async (req: Request, res: Response) => {
 // REVENUE
 
 export const TotalRevenue = async (req: Request, res: Response) => {
-    const { periode } = req.body;
+    const { outlet_id, periode } = req.body;
 
     try {
         const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
@@ -578,22 +591,24 @@ export const TotalRevenue = async (req: Request, res: Response) => {
         }
 
         const [current] = await database.query<RowDataPacket[]>(
-            `SELECT SUM(order_items.qty * order_items.harga) as total_revenue
+            `SELECT COALESCE(SUM(order_items.qty * order_items.harga), 0) as total_revenue
             FROM order_items
             INNER JOIN orders ON orders.order_id = order_items.order_id
             WHERE orders.proses = 'done'
+            AND orders.outlet_id = ?
             ${currentfilter}`,
-            paramsCurrent
+            [outlet_id, ...paramsCurrent]
         );
 
         // Tahun lalu
         const [previous] = await database.query<RowDataPacket[]>(
-            `SELECT SUM(order_items.qty * order_items.harga) as total_revenue
+            `SELECT COALESCE(SUM(order_items.qty * order_items.harga), 0) as total_revenue
             FROM order_items
             INNER JOIN orders ON orders.order_id = order_items.order_id
             WHERE orders.proses = 'done'
+            AND orders.outlet_id = ?
             ${previousfilter}`,
-            paramsPrevious
+            [outlet_id, ...paramsPrevious]
         );
 
         res.json({
@@ -607,7 +622,7 @@ export const TotalRevenue = async (req: Request, res: Response) => {
 };
 
 export const TotalProfit = async (req: Request, res: Response) => {
-    const { periode } = req.body;
+    const { outlet_id, periode } = req.body;
 
     try {
         const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
@@ -660,24 +675,26 @@ export const TotalProfit = async (req: Request, res: Response) => {
         }
 
         const [current] = await database.query<RowDataPacket[]>(
-            `SELECT SUM((order_items.harga - products.hpp) * order_items.qty) AS total_profit
+            `SELECT COALESCE(SUM((order_items.harga - products.hpp) * order_items.qty), 0) AS total_profit
             FROM order_items
             INNER JOIN orders ON orders.order_id = order_items.order_id
             INNER JOIN products ON products.id = order_items.produk_id
             WHERE orders.proses = 'done'
+            AND orders.outlet_id = ?
             ${currentfilter}`,
-            paramsCurrent
+            [outlet_id, ...paramsCurrent]
         );
 
         // Tahun lalu
         const [previous] = await database.query<RowDataPacket[]>(
-            `SELECT SUM((order_items.harga - products.hpp) * order_items.qty) AS total_profit
+            `SELECT COALESCE(SUM((order_items.harga - products.hpp) * order_items.qty), 0) AS total_profit
             FROM order_items
             INNER JOIN orders ON orders.order_id = order_items.order_id
             INNER JOIN products ON products.id = order_items.produk_id
             WHERE orders.proses = 'done'
+            AND orders.outlet_id = ?
             ${previousfilter}`,
-            paramsPrevious
+            [outlet_id, ...paramsPrevious]
         );
 
         res.json({
@@ -691,7 +708,7 @@ export const TotalProfit = async (req: Request, res: Response) => {
 };
 
 export const AverageOrderValue = async (req: Request, res: Response) => {
-    const { periode } = req.body;
+    const { outlet_id, periode } = req.body;
 
     try {
         const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
@@ -744,26 +761,28 @@ export const AverageOrderValue = async (req: Request, res: Response) => {
         }
 
         const [current] = await database.query<RowDataPacket[]>(
-            `SELECT ROUND(SUM(order_items.qty * order_items.harga) 
-                    / COUNT(DISTINCT orders.order_id)) AS total
+            `SELECT COALESCE(ROUND(SUM(order_items.qty * order_items.harga) 
+                    / COUNT(DISTINCT orders.order_id)), 0) AS total
             FROM order_items
             INNER JOIN orders ON orders.order_id = order_items.order_id
             INNER JOIN products ON products.id = order_items.produk_id
             WHERE orders.proses = 'done'
+            AND orders.outlet_id = ?
             ${currentfilter}`,
-            paramsCurrent
+            [outlet_id, ...paramsCurrent]
         );
 
         // Tahun lalu
         const [previous] = await database.query<RowDataPacket[]>(
-            `SELECT ROUND(SUM(order_items.qty * order_items.harga) 
-                    / COUNT(DISTINCT orders.order_id)) AS total
+            `SELECT COALESCE(ROUND(SUM(order_items.qty * order_items.harga) 
+                    / COUNT(DISTINCT orders.order_id)), 0) AS total
             FROM order_items
             INNER JOIN orders ON orders.order_id = order_items.order_id
             INNER JOIN products ON products.id = order_items.produk_id
             WHERE orders.proses = 'done'
+            AND orders.outlet_id = ?
             ${previousfilter}`,
-            paramsPrevious
+            [outlet_id, ...paramsPrevious]
         );
 
         res.json({
@@ -777,7 +796,7 @@ export const AverageOrderValue = async (req: Request, res: Response) => {
 };
 
 export const RevenueByProduct = async (req: Request, res: Response) => {
-    const { periode } = req.body;
+    const { outlet_id, periode } = req.body;
 
     try {
         const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
@@ -802,16 +821,17 @@ export const RevenueByProduct = async (req: Request, res: Response) => {
         }
 
         const [rows] = await database.query<RowDataPacket[]>(
-            `SELECT products.nama as category, SUM(order_items.harga * order_items.qty) as qty
+            `SELECT products.nama as category, COALESCE(SUM(order_items.harga * order_items.qty), 0) as qty
             FROM order_items
             INNER JOIN orders ON orders.order_id = order_items.order_id
             INNER JOIN products ON products.id = order_items.produk_id
-            WHERE proses = 'done'
+            WHERE orders.proses = 'done'
+            AND orders.outlet_id = ?
             ${currentfilter}
             GROUP BY products.nama
             ORDER BY SUM(order_items.harga * order_items.qty) DESC
             LIMIT 5`,
-            paramsCurrent
+            [outlet_id, ...paramsCurrent]
         )
 
         res.status(200).json(rows);
@@ -822,7 +842,7 @@ export const RevenueByProduct = async (req: Request, res: Response) => {
 };
 
 export const RevenueByCategory = async (req: Request, res: Response) => {
-    const { periode } = req.body;
+    const { outlet_id, periode } = req.body;
 
     try {
         const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
@@ -847,16 +867,17 @@ export const RevenueByCategory = async (req: Request, res: Response) => {
         }
 
         const [rows] = await database.query<RowDataPacket[]>(
-            `SELECT products.kategori as category, SUM(order_items.harga * order_items.qty) as qty
+            `SELECT products.kategori as category, COALESCE(SUM(order_items.harga * order_items.qty), 0) as qty
             FROM order_items
             INNER JOIN orders ON orders.order_id = order_items.order_id
             INNER JOIN products ON products.id = order_items.produk_id
-            WHERE proses = 'done'
+            WHERE orders.proses = 'done'
+            AND orders.outlet_id = ?
             ${currentfilter}
             GROUP BY products.kategori
             ORDER BY SUM(order_items.harga * order_items.qty) DESC
             LIMIT 5`,
-            paramsCurrent
+            [outlet_id, ...paramsCurrent]
         )
 
         res.status(200).json(rows);
@@ -867,19 +888,21 @@ export const RevenueByCategory = async (req: Request, res: Response) => {
 };
 
 export const RevenueTrend = async (req: Request, res: Response) => {
+    const outlet_id = req.params.outlet_id;
 
     try {
         const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
 
         const [rows] = await database.query<RowDataPacket[]>(
-            `SELECT orders.order_id as id, DATE(orders.created_at) as createdAt, SUM(order_items.qty * order_items.harga) as qty
+            `SELECT orders.order_id as id, DATE(orders.created_at) as createdAt, COALESCE(SUM(order_items.qty * order_items.harga), 0) as qty
             FROM orders
             INNER JOIN order_items ON order_items.order_id = orders.order_id
-            WHERE proses = 'done'
+            WHERE orders.proses = 'done'
+            AND orders.outlet_id = ?
             AND YEAR(orders.created_at) = YEAR(?)
             GROUP BY DATE(orders.created_at)
             ORDER BY orders.created_at`,
-            [createdAt]
+            [outlet_id, createdAt]
         )
 
         res.status(200).json(rows);
@@ -890,7 +913,7 @@ export const RevenueTrend = async (req: Request, res: Response) => {
 }
 
 export const TopPaymentMethod = async (req: Request, res: Response) => {
-    const { periode } = req.body;
+    const { outlet_id, periode } = req.body;
 
     try {
         const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
@@ -919,11 +942,12 @@ export const TopPaymentMethod = async (req: Request, res: Response) => {
             `SELECT orders.metode as name, COUNT(*) as qty
             FROM orders
             WHERE orders.proses = 'done'
+            AND orders.outlet_id = ?
 			${currentfilter}
 			GROUP BY orders.metode
             ORDER BY COUNT(*) DESC, orders.created_at
             LIMIT 5`,
-            paramsCurrent
+            [outlet_id, ...paramsCurrent]
         )
 
         const data = rows.map(item => ({

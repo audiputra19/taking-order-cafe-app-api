@@ -46,19 +46,21 @@ export const getOrderComplete = async (req: Request, res: Response) => {
     const year = req.params.year ? Number(req.params.year) : 0;
     const month = req.params.month ? Number(req.params.month) : 0;
     const process = req.params.process ?? "all";
+    const outlet_id =req.params.outlet_id;
 
     try {
         const sql = `
             SELECT *
             FROM orders
             WHERE
-              (? = 0 OR YEAR(created_at) = ?)
-              AND (? = 0 OR MONTH(created_at) = ?)
-              AND (
-                    (? = 'all' AND (proses = 'done' OR proses = 'canceled'))
-                    OR 
-                    (? != 'all' AND proses = ?)
-                  )
+                (? = 0 OR YEAR(created_at) = ?)
+                AND (? = 0 OR MONTH(created_at) = ?)
+                AND (
+                        (? = 'all' AND (proses = 'done' OR proses = 'canceled'))
+                        OR 
+                        (? != 'all' AND proses = ?)
+                    )
+                AND outlet_id = ?
             ORDER BY created_at DESC
         `;
 
@@ -66,7 +68,8 @@ export const getOrderComplete = async (req: Request, res: Response) => {
             year, year,
             month, month,
             process,
-            process, process
+            process, process,
+            outlet_id
         ];
 
         const [rows] = await database.query<RowDataPacket[]>(sql, params);

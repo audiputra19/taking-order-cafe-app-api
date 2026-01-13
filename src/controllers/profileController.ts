@@ -69,10 +69,11 @@ export const createCompanyProfileController = async (req: Request, res: Response
 }
 
 export const getCompanyProfileController = async (req: Request, res: Response) => {
+    const outlet_id = req.params.outlet_id;
 
     try {
         const [rows] = await database.query<RowDataPacket[]>(
-            `SELECT * FROM company_profile`
+            `SELECT * FROM company_profile WHERE outlet_id = ?`, [outlet_id]
         );
 
         res.status(200).json(rows[0]);
