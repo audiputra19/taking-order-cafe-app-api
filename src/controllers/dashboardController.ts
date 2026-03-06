@@ -4,80 +4,20 @@ import { RowDataPacket } from "mysql2";
 import moment from "moment-timezone";
 
 export const TotalOrder = async (req: Request, res: Response) => {
-    const { outlet_id, periode } = req.body;
+    const { outlet_id, start_date, end_date } = req.body;
 
     try {
-        const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
-
-        let currentfilter = "";
-        let previousfilter = "";
-        let paramsCurrent: any[] = [];
-        let paramsPrevious: any[] = [];
-
-        if (periode === 1) {
-            // Bulan ini
-            currentfilter = `
-                AND orders.created_at >= DATE_FORMAT(?, '%Y-%m-01')
-                AND orders.created_at < DATE_FORMAT(DATE_ADD(?, INTERVAL 1 MONTH), '%Y-%m-01')
-            `;
-            paramsCurrent = [createdAt, createdAt];
-
-            // Bulan lalu
-            previousfilter = `
-                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
-                AND orders.created_at < DATE_FORMAT(?, '%Y-%m-01')
-            `;
-            paramsPrevious = [createdAt, createdAt];
-        } else if (periode === 2) {
-            // 3 bulan terakhir
-            currentfilter = `
-                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
-                AND orders.created_at < DATE_ADD(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
-            `;
-            paramsCurrent = [createdAt, createdAt];
-
-            // 3 bulan sebelum
-            previousfilter = `
-                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 5 MONTH)
-                AND orders.created_at < DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
-            `;
-            paramsPrevious = [createdAt, createdAt];
-        } else {
-            // Tahun ini
-            currentfilter = `
-                AND YEAR(created_at) = YEAR(?)
-            `;
-            paramsCurrent = [createdAt];
-
-            // Tahun lalu
-            previousfilter = `
-                AND YEAR(created_at) = YEAR(?) - 1
-            `;
-            paramsPrevious = [createdAt];
-        }
-
         const [current] = await database.query<RowDataPacket[]>(
             `SELECT COUNT(*) AS total_order
             FROM orders
             WHERE proses = 'done'
             AND outlet_id = ?
-            ${currentfilter}`,
-            [outlet_id, ...paramsCurrent]
-        );
-
-        // Tahun lalu
-        const [previous] = await database.query<RowDataPacket[]>(
-            `SELECT COUNT(*) AS total_order
-            FROM orders
-            WHERE proses = 'done'
-            AND outlet_id = ?
-            ${previousfilter}`,
-            [outlet_id, ...paramsPrevious]
+            AND DATE(created_at) BETWEEN ? AND ?`,
+            [outlet_id, start_date, end_date]
         );
 
         res.json({
-            current: current[0],
-            previous: previous[0],
+            current: current[0]
         });
     } catch (error) {
         console.error(error);
@@ -86,80 +26,20 @@ export const TotalOrder = async (req: Request, res: Response) => {
 };
 
 export const OrderCanceled = async (req: Request, res: Response) => {
-    const { outlet_id, periode } = req.body;
+    const { outlet_id, start_date, end_date } = req.body;
 
     try {
-        const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
-
-        let currentfilter = "";
-        let previousfilter = "";
-        let paramsCurrent: any[] = [];
-        let paramsPrevious: any[] = [];
-
-        if (periode === 1) {
-            // Bulan ini
-            currentfilter = `
-                AND orders.created_at >= DATE_FORMAT(?, '%Y-%m-01')
-                AND orders.created_at < DATE_FORMAT(DATE_ADD(?, INTERVAL 1 MONTH), '%Y-%m-01')
-            `;
-            paramsCurrent = [createdAt, createdAt];
-
-            // Bulan lalu
-            previousfilter = `
-                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
-                AND orders.created_at < DATE_FORMAT(?, '%Y-%m-01')
-            `;
-            paramsPrevious = [createdAt, createdAt];
-        } else if (periode === 2) {
-            // 3 bulan terakhir
-            currentfilter = `
-                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
-                AND orders.created_at < DATE_ADD(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
-            `;
-            paramsCurrent = [createdAt, createdAt];
-
-            // 3 bulan sebelum
-            previousfilter = `
-                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 5 MONTH)
-                AND orders.created_at < DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
-            `;
-            paramsPrevious = [createdAt, createdAt];
-        } else {
-            // Tahun ini
-            currentfilter = `
-                AND YEAR(created_at) = YEAR(?)
-            `;
-            paramsCurrent = [createdAt];
-
-            // Tahun lalu
-            previousfilter = `
-                AND YEAR(created_at) = YEAR(?) - 1
-            `;
-            paramsPrevious = [createdAt];
-        }
-
         const [current] = await database.query<RowDataPacket[]>(
             `SELECT COUNT(*) AS total_order
             FROM orders
             WHERE proses = 'canceled'
             AND outlet_id = ?
-            ${currentfilter}`,
-            [outlet_id, ...paramsCurrent]
-        );
-
-        // Tahun lalu
-        const [previous] = await database.query<RowDataPacket[]>(
-            `SELECT COUNT(*) AS total_order
-            FROM orders
-            WHERE proses = 'canceled'
-            AND outlet_id = ?
-            ${previousfilter}`,
-            [outlet_id, ...paramsPrevious]
+            AND DATE(created_at) BETWEEN ? AND ?`,
+            [outlet_id, start_date, end_date]
         );
 
         res.status(200).json({
-            current: current[0],
-            previous: previous[0],
+            current: current[0]
         });
     } catch (error) {
         console.error(error);
@@ -168,91 +48,29 @@ export const OrderCanceled = async (req: Request, res: Response) => {
 };
 
 export const AverageOrder = async (req: Request, res: Response) => {
-    const { outlet_id, periode } = req.body;
+    const { outlet_id, start_date, end_date } = req.body;
 
     try {
-        const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
+        const start = moment.tz(start_date, "Asia/Jakarta").startOf("day");
+        const end = moment.tz(end_date, "Asia/Jakarta").endOf("day");
 
-        let currentfilter = "";
-        let previousfilter = "";
-        let divider = 1;
-        let unit = "day";
-        let paramsCurrent: any[] = [];
-        let paramsPrevious: any[] = [];
+        const monthDiff = end.diff(start, "months") + 1;
 
-        if (periode === 1) {
-            currentfilter = `
-                AND orders.created_at >= DATE_FORMAT(?, '%Y-%m-01')
-                AND orders.created_at < DATE_FORMAT(DATE_ADD(?, INTERVAL 1 MONTH), '%Y-%m-01')
-            `;
-            paramsCurrent = [createdAt, createdAt];
-
-            previousfilter = `
-                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
-                AND orders.created_at < DATE_FORMAT(?, '%Y-%m-01')
-            `;
-            paramsPrevious = [createdAt, createdAt];
-            divider = 30;
-            unit = "day";
-
-        } else if (periode === 2) {
-            // 3 bulan terakhir
-            currentfilter = `
-                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
-                AND orders.created_at < DATE_ADD(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
-            `;
-            paramsCurrent = [createdAt, createdAt];
-
-            // 3 bulan sebelum
-            previousfilter = `
-                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 5 MONTH)
-                AND orders.created_at < DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
-            `;
-            paramsPrevious = [createdAt, createdAt];
-            divider = 3;
-            unit = "month";
-
-        } else {
-            currentfilter = `
-                AND YEAR(created_at) = YEAR(?)
-            `;
-            paramsCurrent = [createdAt];
-
-            previousfilter = `
-                AND YEAR(created_at) = YEAR(?) - 1
-            `;
-            paramsPrevious = [createdAt];
-            divider = 12;
-            unit = "month";
-        }
+        const divider = monthDiff > 0 ? monthDiff : 1;
 
         const [current] = await database.query<RowDataPacket[]>(
             `SELECT COUNT(*) AS total_order
              FROM orders
              WHERE proses = 'done'
              AND outlet_id = ?
-             ${currentfilter}`,
-             [outlet_id, ...paramsCurrent]
-        );
-
-        const [previous] = await database.query<RowDataPacket[]>(
-            `SELECT COUNT(*) AS total_order
-             FROM orders
-             WHERE proses = 'done'
-             AND outlet_id = ?
-             ${previousfilter}`,
-             [outlet_id, ...paramsPrevious]
+             AND DATE(created_at) BETWEEN ? AND ?`,
+            [outlet_id, start_date, end_date]
         );
 
         res.status(200).json({
             current: {
-                average: Math.round(current[0].total_order / divider),
-                unit,
-            },
-            previous: {
-                average: Math.round(previous[0].total_order / divider),
-                unit,
-            },
+                average: Math.round(current[0].total_order / divider)
+            }
         });
     } catch (error) {
         console.error(error);
@@ -262,18 +80,19 @@ export const AverageOrder = async (req: Request, res: Response) => {
 
 export const OrderTrend = async (req: Request, res: Response) => {
     const outlet_id = req.params.outlet_id;
+    const start_date = req.params.start_date;
+    const end_date = req.params.end_date;
 
     try {
-        const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
         const [rows] = await database.query<RowDataPacket[]>(
-            `SELECT orders.order_id as id, DATE(orders.created_at) as createdAt, count(*) as qty
+            `SELECT DATE(orders.created_at) as createdAt, count(*) as qty
             FROM orders
             WHERE orders.proses = 'done'
             AND orders.outlet_id = ?
-            AND YEAR(orders.created_at) = YEAR(?)
+            AND DATE(orders.created_at) BETWEEN ? AND ?
             GROUP BY DATE(orders.created_at)
-            ORDER BY orders.created_at`,
-            [outlet_id, createdAt]
+            ORDER BY createdAt`,
+            [outlet_id, start_date, end_date]
         )
 
         res.status(200).json(rows);
@@ -284,43 +103,23 @@ export const OrderTrend = async (req: Request, res: Response) => {
 }
 
 export const CategoryPerformance = async (req: Request, res: Response) => {
-    const { outlet_id, periode } = req.body;
+    const { outlet_id, start_date,end_date } = req.body;
 
     try {
-        const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
-        let paramsCurrent: any[] = [];
-
-        let currentfilter = "";
-        if (periode === 1) {
-            currentfilter = `
-                AND orders.created_at >= DATE_FORMAT(?, '%Y-%m-01')
-                AND orders.created_at < DATE_FORMAT(DATE_ADD(?, INTERVAL 1 MONTH), '%Y-%m-01')
-            `;
-            paramsCurrent = [createdAt, createdAt];
-        } else if (periode === 2) {
-            currentfilter = `
-                AND orders.created_at >= DATE_SUB(?, INTERVAL 3 MONTH)
-            `;
-            paramsCurrent = [createdAt]
-        } else {
-            currentfilter = `
-                AND YEAR(orders.created_at) = YEAR(?)
-            `;
-            paramsCurrent = [createdAt]
-        }
-
         const [rows] = await database.query<RowDataPacket[]>(
-            `SELECT products.kategori as category, SUM(order_items.qty) as qty
+            `SELECT products.kategori as category, MAX(categories.name) as name, SUM(order_items.qty) as qty
             FROM order_items
             INNER JOIN orders ON orders.order_id = order_items.order_id
             INNER JOIN products ON products.id = order_items.produk_id
+            AND products.outlet_id = order_items.outlet_id
+            INNER JOIN categories ON categories.id = products.kategori
             WHERE orders.proses = 'done'
             AND orders.outlet_id = ?
-            ${currentfilter}
+            AND DATE(orders.created_at) BETWEEN ? AND ?
             GROUP BY products.kategori
             ORDER BY SUM(order_items.qty) DESC
             LIMIT 5`,
-            [outlet_id, ...paramsCurrent]
+            [outlet_id, start_date, end_date]
         )
 
         res.status(200).json(rows);
@@ -331,42 +130,20 @@ export const CategoryPerformance = async (req: Request, res: Response) => {
 }
 
 export const BestSellingProducts = async (req: Request, res: Response) => {
-    const { outlet_id, periode } = req.body;
+    const { outlet_id, start_date, end_date } = req.body;
 
     try {
-        const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
-        let paramsCurrent: any[] = [];
-
-        let currentfilter = "";
-        if (periode === 1) {
-            currentfilter = `
-                AND orders.created_at >= DATE_FORMAT(?, '%Y-%m-01')
-                AND orders.created_at < DATE_FORMAT(DATE_ADD(?, INTERVAL 1 MONTH), '%Y-%m-01')
-            `;
-            paramsCurrent = [createdAt, createdAt];
-        } else if (periode === 2) {
-            currentfilter = `
-                AND orders.created_at >= DATE_SUB(?, INTERVAL 3 MONTH)
-            `;
-            paramsCurrent = [createdAt];
-        } else {
-            currentfilter = `
-                AND YEAR(orders.created_at) = YEAR(?)
-            `;
-            paramsCurrent = [createdAt];
-        }
-
         const [rows] = await database.query<RowDataPacket[]>(
             `SELECT order_items.nama as name, SUM(order_items.qty) as qty
             FROM order_items
             INNER JOIN orders ON orders.order_id = order_items.order_id
             WHERE orders.proses = 'done'
             AND orders.outlet_id = ?
-			${currentfilter}
+			AND DATE(orders.created_at) BETWEEN ? AND ?
 			GROUP BY order_items.nama
-            ORDER BY SUM(order_items.qty) DESC, orders.created_at
+            ORDER BY qty DESC
             LIMIT 5`,
-            [outlet_id, ...paramsCurrent]
+            [outlet_id, start_date, end_date]
         )
 
         const data = rows.map(item => ({
@@ -382,42 +159,20 @@ export const BestSellingProducts = async (req: Request, res: Response) => {
 }
 
 export const LowestSellingProducts = async (req: Request, res: Response) => {
-    const { outlet_id, periode } = req.body;
+    const { outlet_id, start_date, end_date } = req.body;
 
     try {
-        const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
-        let paramsCurrent: any[] = [];
-
-        let currentfilter = "";
-        if (periode === 1) {
-            currentfilter = `
-                AND orders.created_at >= DATE_FORMAT(?, '%Y-%m-01')
-                AND orders.created_at < DATE_FORMAT(DATE_ADD(?, INTERVAL 1 MONTH), '%Y-%m-01')
-            `;
-            paramsCurrent = [createdAt, createdAt];
-        } else if (periode === 2) {
-            currentfilter = `
-                AND orders.created_at >= DATE_SUB(?, INTERVAL 3 MONTH)
-            `;
-            paramsCurrent = [createdAt];
-        } else {
-            currentfilter = `
-                AND YEAR(orders.created_at) = YEAR(?)
-            `;
-            paramsCurrent = [createdAt];
-        }
-
         const [rows] = await database.query<RowDataPacket[]>(
             `SELECT order_items.nama as name, SUM(order_items.qty) as qty
             FROM order_items
             INNER JOIN orders ON orders.order_id = order_items.order_id
             WHERE orders.proses = 'done'
             AND orders.outlet_id = ?
-			${currentfilter}
+			AND DATE(orders.created_at) BETWEEN ? AND ?
 			GROUP BY order_items.nama
-            ORDER BY SUM(order_items.qty), orders.created_at
+            ORDER BY qty
             LIMIT 5`,
-            [outlet_id, ...paramsCurrent]
+            [outlet_id, start_date, end_date]
         )
 
         const data = rows.map(item => ({
@@ -433,31 +188,9 @@ export const LowestSellingProducts = async (req: Request, res: Response) => {
 }
 
 export const AverageFulFillmentTime = async (req: Request, res: Response) => {
-    const { outlet_id, periode } = req.body;
+    const { outlet_id, start_date, end_date } = req.body;
 
     try {
-        const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
-        let paramsCurrent: any[] = [];
-
-        let currentfilter = "";
-        if (periode === 1) {
-            currentfilter = `
-                AND o.created_at >= DATE_FORMAT(?, '%Y-%m-01')
-                AND o.created_at < DATE_FORMAT(DATE_ADD(?, INTERVAL 1 MONTH), '%Y-%m-01')
-            `;
-            paramsCurrent = [createdAt, createdAt];
-        } else if (periode === 2) {
-            currentfilter = `
-                AND o.created_at >= DATE_SUB(?, INTERVAL 3 MONTH)
-            `;
-            paramsCurrent = [createdAt];
-        } else {
-            currentfilter = `
-                AND YEAR(o.created_at) = YEAR(?)
-            `;
-            paramsCurrent = [createdAt];
-        }
-
         const [rows] = await database.query<RowDataPacket[]>(
             `SELECT 
                 ROUND(AVG(TIMESTAMPDIFF(MINUTE, t.paid, t.acc_kasir))) AS acc_kasir,
@@ -470,8 +203,8 @@ export const AverageFulFillmentTime = async (req: Request, res: Response) => {
             JOIN time_process t ON o.order_id = t.order_id
             WHERE t.ready IS NOT NULL
             AND o.outlet_id = ?
-            ${currentfilter}`,
-            [outlet_id, ...paramsCurrent]
+            AND DATE(o.created_at) BETWEEN ? AND ?`,
+            [outlet_id, start_date, end_date]
         )
 
         const data = {
@@ -489,43 +222,21 @@ export const AverageFulFillmentTime = async (req: Request, res: Response) => {
 }
 
 export const PeakOrderTime = async (req: Request, res: Response) => {
-    const { outlet_id, periode } = req.body;
+    const { outlet_id, start_date, end_date } = req.body;
 
     try {
-        const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
-        let paramsCurrent: any[] = [];
-
-        let currentfilter = "";
-        if (periode === 1) {
-            currentfilter = `
-                AND orders.created_at >= DATE_FORMAT(?, '%Y-%m-01')
-                AND orders.created_at < DATE_FORMAT(DATE_ADD(?, INTERVAL 1 MONTH), '%Y-%m-01')
-            `;
-            paramsCurrent = [createdAt, createdAt];
-        } else if (periode === 2) {
-            currentfilter = `
-                AND orders.created_at >= DATE_SUB(?, INTERVAL 3 MONTH)
-            `;
-            paramsCurrent = [createdAt];
-        } else {
-            currentfilter = `
-                AND YEAR(orders.created_at) = YEAR(?)
-            `;
-            paramsCurrent = [createdAt];
-        }
-
-        const [rows] = await database.query<RowDataPacket[]>(
+    const [rows] = await database.query<RowDataPacket[]>(
             `SELECT 
                 DATE_FORMAT(orders.created_at, '%h %p') AS category,
                 COUNT(*) AS qty
             FROM orders
             WHERE proses = 'done'
             AND outlet_id = ?
-            ${currentfilter}
+            AND DATE(created_at) BETWEEN ? AND ?
             GROUP BY category
             ORDER BY qty DESC
             LIMIT 3`,
-            [outlet_id, ...paramsCurrent]
+            [outlet_id, start_date, end_date]
         )
 
         res.status(200).json(rows);
@@ -538,82 +249,21 @@ export const PeakOrderTime = async (req: Request, res: Response) => {
 // REVENUE
 
 export const TotalRevenue = async (req: Request, res: Response) => {
-    const { outlet_id, periode } = req.body;
+    const { outlet_id, start_date, end_date } = req.body;
 
     try {
-        const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
-
-        let currentfilter = "";
-        let previousfilter = "";
-        let paramsCurrent: any[] = [];
-        let paramsPrevious: any[] = [];
-
-        if (periode === 1) {
-            // Bulan ini
-            currentfilter = `
-                AND orders.created_at >= DATE_FORMAT(?, '%Y-%m-01')
-                AND orders.created_at < DATE_FORMAT(DATE_ADD(?, INTERVAL 1 MONTH), '%Y-%m-01')
-            `;
-            paramsCurrent = [createdAt, createdAt]
-
-            // Bulan lalu
-            previousfilter = `
-                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
-                AND orders.created_at < DATE_FORMAT(?, '%Y-%m-01')
-            `;
-            paramsPrevious = [createdAt, createdAt]
-        } else if (periode === 2) {
-            // 3 bulan terakhir
-            currentfilter = `
-                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
-                AND orders.created_at < DATE_ADD(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
-            `;
-            paramsCurrent = [createdAt, createdAt];
-
-            // 3 bulan sebelum
-            previousfilter = `
-                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 5 MONTH)
-                AND orders.created_at < DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
-            `;
-            paramsPrevious = [createdAt, createdAt];
-        } else {
-            // Tahun ini
-            currentfilter = `
-                AND YEAR(orders.created_at) = YEAR(?)
-            `;
-            paramsCurrent = [createdAt]
-
-            // Tahun lalu
-            previousfilter = `
-                AND YEAR(orders.created_at) = YEAR(?) - 1
-            `;
-            paramsPrevious = [createdAt]
-        }
-
         const [current] = await database.query<RowDataPacket[]>(
             `SELECT COALESCE(SUM(order_items.qty * order_items.harga), 0) as total_revenue
             FROM order_items
             INNER JOIN orders ON orders.order_id = order_items.order_id
             WHERE orders.proses = 'done'
             AND orders.outlet_id = ?
-            ${currentfilter}`,
-            [outlet_id, ...paramsCurrent]
-        );
-
-        // Tahun lalu
-        const [previous] = await database.query<RowDataPacket[]>(
-            `SELECT COALESCE(SUM(order_items.qty * order_items.harga), 0) as total_revenue
-            FROM order_items
-            INNER JOIN orders ON orders.order_id = order_items.order_id
-            WHERE orders.proses = 'done'
-            AND orders.outlet_id = ?
-            ${previousfilter}`,
-            [outlet_id, ...paramsPrevious]
+            AND DATE(orders.created_at) BETWEEN ? AND ?`,
+            [outlet_id, start_date, end_date]
         );
 
         res.json({
-            current: current[0],
-            previous: previous[0],
+            current: current[0]
         });
     } catch (error) {
         console.error(error);
@@ -622,84 +272,23 @@ export const TotalRevenue = async (req: Request, res: Response) => {
 };
 
 export const TotalProfit = async (req: Request, res: Response) => {
-    const { outlet_id, periode } = req.body;
+    const { outlet_id, start_date, end_date } = req.body;
 
     try {
-        const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
-
-        let currentfilter = "";
-        let previousfilter = "";
-        let paramsCurrent: any[] = [];
-        let paramsPrevious: any[] = [];
-
-        if (periode === 1) {
-            // Bulan ini
-            currentfilter = `
-                AND orders.created_at >= DATE_FORMAT(?, '%Y-%m-01')
-                AND orders.created_at < DATE_FORMAT(DATE_ADD(?, INTERVAL 1 MONTH), '%Y-%m-01')
-            `;
-            paramsCurrent = [createdAt, createdAt];
-
-            // Bulan lalu
-            previousfilter = `
-                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
-                AND orders.created_at < DATE_FORMAT(?, '%Y-%m-01')
-            `;
-            paramsPrevious = [createdAt, createdAt];
-        } else if (periode === 2) {
-            // 3 bulan terakhir
-            currentfilter = `
-                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
-                AND orders.created_at < DATE_ADD(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
-            `;
-            paramsCurrent = [createdAt, createdAt];
-
-            // 3 bulan sebelum
-            previousfilter = `
-                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 5 MONTH)
-                AND orders.created_at < DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
-            `;
-            paramsPrevious = [createdAt, createdAt];
-        } else {
-            // Tahun ini
-            currentfilter = `
-                AND YEAR(orders.created_at) = YEAR(?)
-            `;
-            paramsCurrent = [createdAt];
-
-            // Tahun lalu
-            previousfilter = `
-                AND YEAR(orders.created_at) = YEAR(?) - 1
-            `;
-            paramsPrevious = [createdAt];
-        }
-
         const [current] = await database.query<RowDataPacket[]>(
             `SELECT COALESCE(SUM((order_items.harga - products.hpp) * order_items.qty), 0) AS total_profit
             FROM order_items
             INNER JOIN orders ON orders.order_id = order_items.order_id
             INNER JOIN products ON products.id = order_items.produk_id
+            AND products.outlet_id = order_items.outlet_id
             WHERE orders.proses = 'done'
             AND orders.outlet_id = ?
-            ${currentfilter}`,
-            [outlet_id, ...paramsCurrent]
-        );
-
-        // Tahun lalu
-        const [previous] = await database.query<RowDataPacket[]>(
-            `SELECT COALESCE(SUM((order_items.harga - products.hpp) * order_items.qty), 0) AS total_profit
-            FROM order_items
-            INNER JOIN orders ON orders.order_id = order_items.order_id
-            INNER JOIN products ON products.id = order_items.produk_id
-            WHERE orders.proses = 'done'
-            AND orders.outlet_id = ?
-            ${previousfilter}`,
-            [outlet_id, ...paramsPrevious]
+            AND DATE(orders.created_at) BETWEEN ? AND ?`,
+            [outlet_id, start_date, end_date]
         );
 
         res.json({
-            current: current[0],
-            previous: previous[0],
+            current: current[0]
         });
     } catch (error) {
         console.error(error);
@@ -708,86 +297,24 @@ export const TotalProfit = async (req: Request, res: Response) => {
 };
 
 export const AverageOrderValue = async (req: Request, res: Response) => {
-    const { outlet_id, periode } = req.body;
+    const { outlet_id, start_date, end_date } = req.body;
 
     try {
-        const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
-
-        let currentfilter = "";
-        let previousfilter = "";
-        let paramsCurrent: any[] = [];
-        let paramsPrevious: any[] = [];
-
-        if (periode === 1) {
-            // Bulan ini
-            currentfilter = `
-                AND orders.created_at >= DATE_FORMAT(?, '%Y-%m-01')
-                AND orders.created_at < DATE_FORMAT(DATE_ADD(?, INTERVAL 1 MONTH), '%Y-%m-01')
-            `;
-            paramsCurrent = [createdAt, createdAt];
-
-            // Bulan lalu
-            previousfilter = `
-                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
-                AND orders.created_at < DATE_FORMAT(?, '%Y-%m-01')
-            `;
-            paramsPrevious = [createdAt, createdAt];
-        } else if (periode === 2) {
-            // 3 bulan terakhir
-            currentfilter = `
-                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
-                AND orders.created_at < DATE_ADD(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 1 MONTH)
-            `;
-            paramsCurrent = [createdAt, createdAt];
-
-            // 3 bulan sebelum
-            previousfilter = `
-                AND orders.created_at >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 5 MONTH)
-                AND orders.created_at < DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL 2 MONTH)
-            `;
-            paramsPrevious = [createdAt, createdAt];
-        } else {
-            // Tahun ini
-            currentfilter = `
-                AND YEAR(orders.created_at) = YEAR(?)
-            `;
-            paramsCurrent = [createdAt];
-
-            // Tahun lalu
-            previousfilter = `
-                AND YEAR(orders.created_at) = YEAR(?) - 1
-            `;
-            paramsPrevious = [createdAt];
-        }
-
         const [current] = await database.query<RowDataPacket[]>(
             `SELECT COALESCE(ROUND(SUM(order_items.qty * order_items.harga) 
                     / COUNT(DISTINCT orders.order_id)), 0) AS total
             FROM order_items
             INNER JOIN orders ON orders.order_id = order_items.order_id
             INNER JOIN products ON products.id = order_items.produk_id
+            AND products.outlet_id = order_items.outlet_id
             WHERE orders.proses = 'done'
             AND orders.outlet_id = ?
-            ${currentfilter}`,
-            [outlet_id, ...paramsCurrent]
-        );
-
-        // Tahun lalu
-        const [previous] = await database.query<RowDataPacket[]>(
-            `SELECT COALESCE(ROUND(SUM(order_items.qty * order_items.harga) 
-                    / COUNT(DISTINCT orders.order_id)), 0) AS total
-            FROM order_items
-            INNER JOIN orders ON orders.order_id = order_items.order_id
-            INNER JOIN products ON products.id = order_items.produk_id
-            WHERE orders.proses = 'done'
-            AND orders.outlet_id = ?
-            ${previousfilter}`,
-            [outlet_id, ...paramsPrevious]
+            AND DATE(orders.created_at) BETWEEN ? AND ?`,
+            [outlet_id, start_date, end_date]
         );
 
         res.json({
-            current: current[0],
-            previous: previous[0],
+            current: current[0]
         });
     } catch (error) {
         console.error(error);
@@ -796,42 +323,22 @@ export const AverageOrderValue = async (req: Request, res: Response) => {
 };
 
 export const RevenueByProduct = async (req: Request, res: Response) => {
-    const { outlet_id, periode } = req.body;
+    const { outlet_id, start_date, end_date } = req.body;
 
     try {
-        const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
-        let paramsCurrent: any[] = [];
-
-        let currentfilter = "";
-        if (periode === 1) {
-            currentfilter = `
-                AND orders.created_at >= DATE_SUB(?, INTERVAL 1 MONTH)
-            `;
-            paramsCurrent = [createdAt];
-        } else if (periode === 2) {
-            currentfilter = `
-                AND orders.created_at >= DATE_SUB(?, INTERVAL 3 MONTH)
-            `;
-            paramsCurrent = [createdAt];
-        } else {
-            currentfilter = `
-                AND YEAR(orders.created_at) = YEAR(?)
-            `;
-            paramsCurrent = [createdAt];
-        }
-
         const [rows] = await database.query<RowDataPacket[]>(
             `SELECT products.nama as category, COALESCE(SUM(order_items.harga * order_items.qty), 0) as qty
             FROM order_items
             INNER JOIN orders ON orders.order_id = order_items.order_id
             INNER JOIN products ON products.id = order_items.produk_id
+            AND products.outlet_id = order_items.outlet_id
             WHERE orders.proses = 'done'
             AND orders.outlet_id = ?
-            ${currentfilter}
+            AND DATE(orders.created_at) BETWEEN ? AND ?
             GROUP BY products.nama
-            ORDER BY SUM(order_items.harga * order_items.qty) DESC
+            ORDER BY qty DESC
             LIMIT 5`,
-            [outlet_id, ...paramsCurrent]
+            [outlet_id, start_date, end_date]
         )
 
         res.status(200).json(rows);
@@ -842,42 +349,23 @@ export const RevenueByProduct = async (req: Request, res: Response) => {
 };
 
 export const RevenueByCategory = async (req: Request, res: Response) => {
-    const { outlet_id, periode } = req.body;
+    const { outlet_id, start_date, end_date } = req.body;
 
     try {
-        const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
-        let paramsCurrent: any[] = [];
-
-        let currentfilter = "";
-        if (periode === 1) {
-            currentfilter = `
-                AND orders.created_at >= DATE_SUB(?, INTERVAL 1 MONTH)
-            `;
-            paramsCurrent = [createdAt];
-        } else if (periode === 2) {
-            currentfilter = `
-                AND orders.created_at >= DATE_SUB(?, INTERVAL 3 MONTH)
-            `;
-            paramsCurrent = [createdAt];
-        } else {
-            currentfilter = `
-                AND YEAR(orders.created_at) = YEAR(?)
-            `;
-            paramsCurrent = [createdAt];
-        }
-
         const [rows] = await database.query<RowDataPacket[]>(
-            `SELECT products.kategori as category, COALESCE(SUM(order_items.harga * order_items.qty), 0) as qty
+            `SELECT products.kategori as category, MAX(categories.name) as name, COALESCE(SUM(order_items.harga * order_items.qty), 0) as qty
             FROM order_items
             INNER JOIN orders ON orders.order_id = order_items.order_id
             INNER JOIN products ON products.id = order_items.produk_id
+            AND products.outlet_id = order_items.outlet_id
+            INNER JOIN categories ON categories.id = products.kategori
             WHERE orders.proses = 'done'
             AND orders.outlet_id = ?
-            ${currentfilter}
+            AND DATE(orders.created_at) BETWEEN ? AND ?
             GROUP BY products.kategori
-            ORDER BY SUM(order_items.harga * order_items.qty) DESC
+            ORDER BY qty DESC
             LIMIT 5`,
-            [outlet_id, ...paramsCurrent]
+            [outlet_id, start_date, end_date]
         )
 
         res.status(200).json(rows);
@@ -889,20 +377,21 @@ export const RevenueByCategory = async (req: Request, res: Response) => {
 
 export const RevenueTrend = async (req: Request, res: Response) => {
     const outlet_id = req.params.outlet_id;
+    const start_date = req.params.start_date;
+    const end_date = req.params.end_date;
 
     try {
-        const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
-
         const [rows] = await database.query<RowDataPacket[]>(
-            `SELECT orders.order_id as id, DATE(orders.created_at) as createdAt, COALESCE(SUM(order_items.qty * order_items.harga), 0) as qty
+            `SELECT DATE(orders.created_at) as createdAt, 
+                COALESCE(SUM(order_items.qty * order_items.harga), 0) as qty
             FROM orders
             INNER JOIN order_items ON order_items.order_id = orders.order_id
             WHERE orders.proses = 'done'
             AND orders.outlet_id = ?
-            AND YEAR(orders.created_at) = YEAR(?)
+            AND DATE(orders.created_at) BETWEEN ? AND ?
             GROUP BY DATE(orders.created_at)
-            ORDER BY orders.created_at`,
-            [outlet_id, createdAt]
+            ORDER BY createdAt`,
+            [outlet_id, start_date, end_date]
         )
 
         res.status(200).json(rows);
@@ -913,41 +402,19 @@ export const RevenueTrend = async (req: Request, res: Response) => {
 }
 
 export const TopPaymentMethod = async (req: Request, res: Response) => {
-    const { outlet_id, periode } = req.body;
+    const { outlet_id, start_date, end_date } = req.body;
 
     try {
-        const createdAt = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
-        let paramsCurrent: any[] = [];
-
-        let currentfilter = "";
-        if (periode === 1) {
-            currentfilter = `
-                AND orders.created_at >= DATE_FORMAT(?, '%Y-%m-01')
-                AND orders.created_at < DATE_FORMAT(DATE_ADD(?, INTERVAL 1 MONTH), '%Y-%m-01')
-            `;
-            paramsCurrent = [createdAt, createdAt];
-        } else if (periode === 2) {
-            currentfilter = `
-                AND orders.created_at >= DATE_SUB(?, INTERVAL 3 MONTH)
-            `;
-            paramsCurrent = [createdAt];
-        } else {
-            currentfilter = `
-                AND YEAR(orders.created_at) = YEAR(?)
-            `;
-            paramsCurrent = [createdAt];
-        }
-
         const [rows] = await database.query<RowDataPacket[]>(
             `SELECT orders.metode as name, COUNT(*) as qty
             FROM orders
             WHERE orders.proses = 'done'
             AND orders.outlet_id = ?
-			${currentfilter}
+			AND DATE(orders.created_at) BETWEEN ? AND ?
 			GROUP BY orders.metode
-            ORDER BY COUNT(*) DESC, orders.created_at
+            ORDER BY qty DESC
             LIMIT 5`,
-            [outlet_id, ...paramsCurrent]
+            [outlet_id, start_date, end_date]
         )
 
         const data = rows.map(item => ({

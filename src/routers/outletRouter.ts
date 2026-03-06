@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { AddOutletController, GetOutletController } from "../controllers/outletCOntroller";
+import { AddOutletController, GetOutletController } from "../controllers/outletController";
 
 const outletRouter = Router();
 

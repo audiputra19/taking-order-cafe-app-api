@@ -3,9 +3,12 @@ import database from "../config/db";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 
 export const createVoucher = async (req: Request, res: Response) => {
-    const {nama, min_belanja, persen, due_date} = req.body;
+    const {outlet_id, nama, min_belanja, persen, due_date} = req.body;
 
     try {
+        if(!outlet_id) {
+            return res.status(400).json({ message: "Outlet ID tidak boleh kosong!" });
+        }
 
         if (!nama || !min_belanja || !persen || !due_date) {
             return res.status(400).json({ message: "Semua form harus diisi!" });
@@ -24,9 +27,9 @@ export const createVoucher = async (req: Request, res: Response) => {
         const newId = `VOUCHER.${newNumber}`;
 
         await database.query<ResultSetHeader>(
-            `INSERT INTO voucher (id_voucher, nama, min_belanja, persen, due_date)
-            VALUES (?, ?, ?, ?, ?)`,
-            [newId, nama, min_belanja, persen, due_date]
+            `INSERT INTO voucher (id_voucher, outlet_id, nama, min_belanja, persen, due_date)
+            VALUES (?, ?, ?, ?, ?, ?)`,
+            [newId, outlet_id, nama, min_belanja, persen, due_date]
         );
 
         res.status(200).json({ message: 'Voucher berhasil diinput' });
@@ -51,10 +54,13 @@ export const getVoucher = async (req: Request, res: Response) => {
 }
 
 export const updateVoucher = async (req: Request, res: Response) => {
-    const {nama, min_belanja, persen, due_date} = req.body;
+    const {outlet_id, nama, min_belanja, persen, due_date} = req.body;
     const {id} = req.params;
 
     try {
+        if(!outlet_id) {
+            return res.status(400).json({ message: "Outlet ID tidak boleh kosong!" });
+        }
 
         if (!id) {
             return res.status(400).json({ message: "ID voucher tidak ditemukan!" });
@@ -65,8 +71,10 @@ export const updateVoucher = async (req: Request, res: Response) => {
         }
 
         await database.query<ResultSetHeader>(
-            `UPDATE voucher SET nama = ?, min_belanja = ?, persen = ?, due_date = ? WHERE id_voucher = ?`,
-            [nama, min_belanja, persen, due_date, id]
+            `UPDATE voucher 
+            SET nama = ?, min_belanja = ?, persen = ?, due_date = ? 
+            WHERE id_voucher = ? AND outlet_id = ?`,
+            [nama, min_belanja, persen, due_date, id, outlet_id]
         );
 
         res.status(200).json({ message: 'Voucher berhasil diupdate' });

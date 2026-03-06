@@ -6,7 +6,7 @@ const dashboardRouter = Router();
 dashboardRouter.post("/total-order", TotalOrder);
 dashboardRouter.post("/order-canceled", OrderCanceled);
 dashboardRouter.post("/average-order", AverageOrder);
-dashboardRouter.get("/order-trend/:outlet_id", OrderTrend);
+dashboardRouter.get("/order-trend/:outlet_id/:start_date/:end_date", OrderTrend);
 dashboardRouter.post("/category-performance", CategoryPerformance);
 dashboardRouter.post("/best-selling-products", BestSellingProducts);
 dashboardRouter.post("/lowest-selling-products", LowestSellingProducts);
@@ -18,7 +18,7 @@ dashboardRouter.post("/total-profit", TotalProfit);
 dashboardRouter.post("/average-order-value", AverageOrderValue);
 dashboardRouter.post("/revenue-product", RevenueByProduct);
 dashboardRouter.post("/revenue-category", RevenueByCategory);
-dashboardRouter.get("/revenue-trend/:outlet_id", RevenueTrend);
+dashboardRouter.get("/revenue-trend/:outlet_id/:start_date/:end_date", RevenueTrend);
 dashboardRouter.post("/top-payment-method", TopPaymentMethod);
 
 export default dashboardRouter;

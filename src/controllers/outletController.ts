@@ -58,7 +58,7 @@ export const AddOutletController = async (req: Request, res: Response) => {
             [outlet_id, fullname, phone, email, username, hashedPassword, 1]
         );
 
-        res.status(200).json({ message: 'Registrasi Berhasil' });
+        res.status(200).json({ message: 'Outlet berhasil diinput' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Terjadi kesalahan pada server" })

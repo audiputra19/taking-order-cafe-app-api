@@ -10,63 +10,57 @@ import { ResultSetHeader, RowDataPacket } from "mysql2";
 // if (!fs.existsSync(uploadDir)) {
 //   fs.mkdirSync(uploadDir, { recursive: true });
 // }
-const uploadDir = path.join('/app/uploads/logo');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+const companyStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const outletId = req.body.outlet_id;
+    const dir = path.join('/app/uploads', `outlet_${outletId}`, 'logo');
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        const ext = path.extname(file.originalname);
-        cb(null, "company_logo" + ext);
-    },
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, 'company_logo' + path.extname(file.originalname));
+  }
 });
 
-export const upload = multer({
-    storage,
-    limits: { fileSize: 2 * 1024 * 1024 }, // max 2MB
+export const uploadCompanyLogo = multer({
+  storage: companyStorage,
+  limits: { fileSize: 2 * 1024 * 1024 }
 });
 
 export const createCompanyProfileController = async (req: Request, res: Response) => {
-    const { name, address } = req.body;
+    const { outlet_id, name, address, phone } = req.body;
     const file = req.file;
 
     try {
-        const [rows] = await database.query<RowDataPacket[]>("SELECT * FROM company_profile LIMIT 1");
-        const oldData = rows[0];
-
-        let imageTitle = oldData?.image_title || null;
-        let imagePath = oldData?.image_path || null;
-
         if (file) {
-            const oldFiles = fs.readdirSync(uploadDir).filter(f => f.startsWith("company_logo"));
-            for (const old of oldFiles) {
-                if (old !== file.filename) {
-                fs.unlinkSync(path.join(uploadDir, old));
-                }
-            }
+            const imageTitle = file.originalname;
+            const imagePath = `/uploads/outlet_${outlet_id}/logo/${file.filename}`;
 
-            imageTitle = file.originalname;
-            imagePath = `/uploads/logo/${file.filename}`;
+            await database.query(
+                `UPDATE company_profile 
+                SET name = ?, address = ?, phone = ?, image_title = ?, image_path = ?
+                WHERE outlet_id = ?`,
+                [name, address, phone, imageTitle, imagePath, outlet_id]
+            );
+        } else {
+            await database.query(
+                `UPDATE company_profile 
+                SET name = ?, address = ?, phone = ?
+                WHERE outlet_id = ?`,
+                [name, address, phone, outlet_id]
+            );
         }
 
-        await database.query("DELETE FROM company_profile");
-
-        await database.query<ResultSetHeader>(
-            `INSERT INTO company_profile (name, address, image_title, image_path) 
-             VALUES (?, ?, ?, ?)`,
-            [name, address, imageTitle, imagePath]
-        );
-
-        res.status(200).json({
-            message: "Data perusahaan berhasil diperbarui"
-        });
+        res.status(200).json({ message: "Profil perusahaan berhasil diupdate" });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Terjadi kesalahan pada server' });
+        res.status(500).json({ message: "Terjadi kesalahan pada server" });
     }
-}
+};
 
 export const getCompanyProfileController = async (req: Request, res: Response) => {
     const outlet_id = req.params.outlet_id;
@@ -82,3 +76,21 @@ export const getCompanyProfileController = async (req: Request, res: Response) =
         res.status(500).json({ message: 'Terjadi kesalahan pada server' });
     }
 }
+
+export const customizeCompanyProfileController = async (req: Request, res: Response) => {
+    const { outlet_id, primary_color } = req.body;
+
+    try {
+        await database.query(
+            `UPDATE company_profile 
+            SET primary_color = ?
+            WHERE outlet_id = ?`,
+            [primary_color, outlet_id]
+        );
+
+        res.status(200).json({ message: "Profil perusahaan berhasil dikustomisasi" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Terjadi kesalahan pada server" });
+    }
+};

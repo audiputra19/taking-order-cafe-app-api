@@ -14,6 +14,8 @@ import profileRouter from "./routers/profileRouter";
 import voucherRouter from "./routers/voucherRouter";
 import wilayahRouter from "./routers/wilayahRouter";
 import outletRouter from "./routers/outletRouter";
+import paymentRouter from "./routers/paymentRouter";
+import categoryRouter from "./routers/categoryRouter";
 
 const app = express();
 const server = http.createServer(app);
@@ -38,6 +40,8 @@ app.use("/profile", profileRouter);
 app.use("/voucher", voucherRouter);
 app.use("/api/wilayah", wilayahRouter);
 app.use("/outlet", outletRouter);
+app.use("/payment", paymentRouter);
+app.use("/category", categoryRouter);
 
 app.get("/", (req: Request, res: Response) => {
     res.send("Welcome back!");
